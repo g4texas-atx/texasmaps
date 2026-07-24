@@ -245,7 +245,7 @@ header .subtitle { font-size: 0.72rem; color: #64748b; font-weight: 400; }
     </div>
     <div class="map-legend">
       <div class="legend-title">Legend</div>
-      <div class="legend-row"><div class="legend-swatch" style="background:#bfdbfe;border:1px solid #60a5fa"></div>Central TX (30 counties)</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#bfdbfe;border:1px solid #60a5fa"></div>AUS/CenTex Region 4 (30 counties)</div>
       <div class="legend-row"><div class="legend-swatch" style="background:#2563eb;border:1px solid #1d4ed8"></div>Selected county</div>
       <div class="legend-row"><div class="legend-swatch" style="background:#dde6f0;border:1px solid #b0c4de"></div>Other TX counties</div>
       <div style="margin-top:6px;color:#94a3b8;font-size:0.65rem">Scroll or pinch to zoom · drag to pan</div>
@@ -267,9 +267,9 @@ header .subtitle { font-size: 0.72rem; color: #64748b; font-weight: 400; }
         <div class="arrow">👈</div>
         <p>Click any highlighted county on the map.<br><br>
           <strong>Democrats &amp; Independents listed first.</strong><br>
-          Dashed cards = Dem primary winners who will likely take office after the November general election.
+          Dashed cards = incoming (no GOP opponent). Purple badge = 2026 Dem nominee in a contested race.
           <br><br>
-          <em style="font-size:0.75rem;color:#94a3b8">⚠ Some names/links need verification — data current as of June 2026. Always cross-check before use.</em>
+          <em style="font-size:0.75rem;color:#94a3b8">⚠ Data current as of July 21, 2026 — includes 2026 Dem nominees (purple badge) and verified GOP officeholders. Cross-check before publication.</em>
         </p>
       </div>
     </div>
@@ -295,11 +295,9 @@ const COUNTIES = {
   'Travis': {
     fips: '48453', pop: '~1,404,419',
     officials: [
-      // ── TIER B ─────────────────────────────────────────
-      // State Senators
       {
         name: 'Sarah Eckhardt', photo: 'https://senate.texas.gov/members/d14/img/SE_headshot_2020.jpg', office: 'State Senator, SD 14', party: 'D', tier: 'B',
-        status: 'vacating', note: 'Running for TX Comptroller (Nov 2026 general) — retains senate seat until Jan 2027',
+        status: 'vacating', note: 'Dem nominee for TX Comptroller — SD 14 seat itself not up until 2028',
         links: {
           web: 'https://senate.texas.gov/member.php?d=14',
           ballotpedia: 'https://ballotpedia.org/Sarah_Eckhardt',
@@ -315,7 +313,6 @@ const COUNTIES = {
           results: null
         }
       },
-      // State Reps — Democrats
       {
         name: 'Sheryl Cole', photo: 'https://house.texas.gov/images/members/3625.jpg', office: 'State Rep., HD 46', party: 'D', tier: 'B',
         status: 'incumbent',
@@ -397,7 +394,6 @@ const COUNTIES = {
           results: null
         }
       },
-      // County officials — Democrats
       {
         name: 'Andy Brown', photo: 'https://www.traviscountytx.gov/images/commissioners_court/judge/JudgeBrown-headshot.jpg', office: 'County Judge', party: 'D', tier: 'B',
         status: 'incumbent',
@@ -434,7 +430,6 @@ const COUNTIES = {
           results: null
         }
       },
-      // State Reps — Republican
       {
         name: 'Ellen Troxclair', photo: 'https://house.texas.gov/images/members/4385.jpg', office: 'State Rep., HD 19', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Covers Westlake/far west Travis area',
@@ -453,7 +448,6 @@ const COUNTIES = {
           results: null
         }
       },
-      // ── TIER C ─────────────────────────────────────────
       {
         name: 'Celia Israel', photo: 'https://tax-office.traviscountytx.gov/images/celia-israel-full.jpg', office: 'Tax Assessor-Collector', party: 'D', tier: 'C',
         status: 'incumbent', note: 'Term ends Dec 31, 2028',
@@ -464,7 +458,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Dyana Limon-Mercado', office: 'County Clerk', party: 'D', tier: 'C',
+        name: 'Dyana Limon-Mercado', photo: null, office: 'County Clerk', party: 'D', tier: 'C',
         status: 'incumbent',
         links: {
           web: 'https://www.traviscountytx.gov/county-clerk',
@@ -473,7 +467,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Dolores Ortega Carter', office: 'County Treasurer', party: 'D', tier: 'C',
+        name: 'Dolores Ortega Carter', photo: null, office: 'County Treasurer', party: 'D', tier: 'C',
         status: 'incumbent',
         links: {
           web: 'https://www.traviscountytx.gov/treasurer',
@@ -517,9 +511,243 @@ const COUNTIES = {
           results: null
         }
       },
+      {
+        name: 'Rebecca Bell-Metereau', photo: null, office: 'SBOE Member, District 5', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Sitting SBOE member — not seeking re-election',
+        links: null
+      },
+      {
+        name: 'Allison Bush', photo: null, office: 'SBOE District 5 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Won May runoff — faces Mica Arellano (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Velva L. Price', photo: null, office: 'District Clerk', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Unopposed in primary; on Nov ’26 ballot',
+        links: null
+      },
+      {
+        name: 'George Morales III', photo: null, office: 'Commissioner, Precinct 4 — incoming', party: 'D', tier: 'C',
+        status: 'incoming', note: 'Won May runoff 54.9% · no GOP opponent · succeeds retiring Margaret Gómez',
+        links: null
+      },
+      {
+        name: 'Yvonne M. Williams', photo: null, office: 'Justice of the Peace, Pct 1', party: 'D', tier: 'C',
+        status: 'vacating', note: 'Term ends 2026 — Ciara Parks is Dem nominee',
+        links: null
+      },
+      {
+        name: 'Ciara Parks', photo: null, office: 'JP Pct 1 — Dem nominee (incoming)', party: 'D', tier: 'C',
+        status: 'incoming', note: 'Won primary 65.6% over Andrew Hairston',
+        links: null
+      },
+      {
+        name: 'Randall Slagle', photo: null, office: 'Justice of the Peace, Pct 2', party: 'D', tier: 'C',
+        status: 'vacating', note: 'Lost Dem primary to Mariel Kelley — term ends 2026',
+        links: null
+      },
+      {
+        name: 'Mariel Kelley', photo: null, office: 'JP Pct 2 — Dem nominee (incoming)', party: 'D', tier: 'C',
+        status: 'incoming', note: 'Defeated incumbent Slagle in Dem primary',
+        links: null
+      },
+      {
+        name: 'Sylvia Holmes', photo: null, office: 'Justice of the Peace, Pct 3', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Raúl Arturo González', photo: null, office: 'Justice of the Peace, Pct 4', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Tanisa Jeffers', photo: null, office: 'Justice of the Peace, Pct 5', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Tonya Nixon', photo: null, office: 'Constable, Precinct 1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Elected 2024',
+        links: null
+      },
+      {
+        name: 'Adan Ballesteros', photo: null, office: 'Constable, Precinct 2', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Elected 2024',
+        links: null
+      },
+      {
+        name: 'Gabriel Padilla', photo: null, office: 'Constable, Precinct 4', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Appointed after Morales resigned to run; won ’26 primary 76.5% (unexpired term)',
+        links: null
+      },
+      {
+        name: 'Maria Cantú Hexsel', photo: null, office: 'District Judge, 53rd (civil)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Sandra Avila Ramirez', photo: null, office: 'District Judge, 98th (civil)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Aurora Martinez Jones', photo: null, office: 'District Judge, 126th (civil)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Jessica Mangrum', photo: null, office: 'District Judge, 200th (civil)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Amy Clark Meachum', photo: null, office: 'District Judge, 201st (civil)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Kennon Lily Wooten', photo: null, office: '250th District — Dem nominee (incoming)', party: 'D', tier: 'C',
+        status: 'incoming', note: 'Seat currently held by Abbott appointee Cory Liu (R); no GOP candidate filed for Nov',
+        links: null
+      },
+      {
+        name: 'Daniella Deseta Lyttle', photo: null, office: 'District Judge, 261st (civil)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Jan Soifer', photo: null, office: 'District Judge, 345th (civil)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Sherine Thomas', photo: null, office: 'District Judge, 353rd (civil)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Catherine A. Mauzy', photo: null, office: 'District Judge, 419th (civil)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Laurie Eiserloh', photo: null, office: 'District Judge, 455th (civil)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Maya Guerra Gamble', photo: null, office: 'District Judge, 459th (civil)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Cliff Brown', photo: null, office: 'District Judge, 147th (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Dayna Blazey', photo: null, office: 'District Judge, 167th (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Karen Sage', photo: null, office: 'District Judge, 299th (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Chantal Eldridge', photo: null, office: 'District Judge, 331st (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Julie Kocurek', photo: null, office: 'District Judge, 390th (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Brandy Mueller', photo: null, office: 'District Judge, 403rd (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Tamara Needles', photo: null, office: 'District Judge, 427th (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Brad Urrutia', photo: null, office: 'District Judge, 450th (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Selena Alvarenga', photo: null, office: 'District Judge, 460th (criminal)', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Todd Wong', photo: null, office: 'County Court-at-Law #1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Eric Shepperd', photo: null, office: 'County Court-at-Law #2', party: 'D', tier: 'C',
+        status: 'vacating', note: 'Leslie Dippel is the ’26 Dem nominee for CCL 2 — verify transition',
+        links: null
+      },
+      {
+        name: 'Leslie Dippel', photo: null, office: 'CCL #2 — Dem nominee (incoming)', party: 'D', tier: 'C',
+        status: 'incoming', note: 'No GOP opponent',
+        links: null
+      },
+      {
+        name: 'Bianca Garcia', photo: null, office: 'County Court-at-Law #3', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Dimple Malhotra', photo: null, office: 'County Court-at-Law #4', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Mary Ann Espiritu', photo: null, office: 'County Court-at-Law #5', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Denise Hernández', photo: null, office: 'County Court-at-Law #6', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Elisabeth Earle', photo: null, office: 'County Court-at-Law #7', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Carlos H. Barrera', photo: null, office: 'County Criminal Court #8', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Kim Williams', photo: null, office: 'County Criminal Court #9', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Guy Herman', photo: null, office: 'Probate Court #1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot — unopposed',
+        links: null
+      },
+      {
+        name: 'Nicholas Chu', photo: null, office: 'Probate Court #2', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: null
+      },
     ]
   },
-
   'Williamson': {
     fips: '48491', pop: '~727,480',
     officials: [
@@ -529,24 +757,6 @@ const COUNTIES = {
         links: {
           web: 'https://house.texas.gov/members/member-page/?district=136',
           ballotpedia: 'https://ballotpedia.org/John_Bucy_III',
-          results: null
-        }
-      },
-      {
-        name: 'Bill Gravell', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: {
-          web: 'https://www.wilcotx.gov/188/Elected-Officials',
-          ballotpedia: 'https://ballotpedia.org/Bill_Gravell',
-          results: null
-        }
-      },
-      {
-        name: 'Stacey Soule', office: 'District Attorney', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: {
-          web: 'https://www.wilcotx.gov/188/Elected-Officials',
-          ballotpedia: null,
           results: null
         }
       },
@@ -587,13 +797,87 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Sheriff — verify', office: 'County Sheriff', party: 'R', tier: 'B',
-        status: 'incumbent', note: '⚠ Chody removed from office — current sheriff needs verification',
-        links: { web: 'https://www.wilcotx.gov/188/Elected-Officials', ballotpedia: null, results: null }
+        name: 'Steve Snell', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Appointed March 2025 after Gravell resigned; faces Dem Heather Jefts in Nov',
+        links: null
+      },
+      {
+        name: 'Shawn Dick', photo: null, office: 'District Attorney (26th Jud. Dist.)', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Matthew Lindemann', photo: null, office: 'County Sheriff', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Elected 2024 (defeated Dem incumbent Mike Gleason)',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Joe P. Herrera', photo: null, office: 'State Senate nominee, SD 24', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Pete Flores (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Matthias-Jonah Early', photo: null, office: 'State Rep. nominee, HD 20', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Terry Wilson (R)',
+        links: null
+      },
+      {
+        name: 'Chris Jimenez', photo: null, office: 'State Rep. nominee, HD 52', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Caroline Harris Davila (R)',
+        links: null
+      },
+      {
+        name: 'Rebecca Bell-Metereau', photo: null, office: 'SBOE Member, District 5', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Sitting SBOE member — not seeking re-election',
+        links: null
+      },
+      {
+        name: 'Allison Bush', photo: null, office: 'SBOE District 5 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Won May runoff — faces Mica Arellano (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Heather Jefts', photo: null, office: 'County Judge — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Unopposed in Dem primary — faces Steve Snell (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Terry Cook', photo: null, office: 'Commissioner, Precinct 1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Re-elected 2024 — term through 2028',
+        links: null
+      },
+      {
+        name: 'Harmon Rhea', photo: null, office: 'Commissioner Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces incumbent Russ Boles (R)',
+        links: null
+      },
+      {
+        name: 'Erin Block', photo: null, office: 'County Clerk — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee',
+        links: null
+      },
+      {
+        name: 'Brian Walbridge', photo: null, office: 'County Treasurer — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee',
+        links: null
+      },
+      {
+        name: 'KT Musselman', photo: null, office: 'Justice of the Peace, Pct 1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot',
+        links: null
+      },
+      {
+        name: 'Mickey Chance', photo: null, office: 'Constable, Precinct 1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Re-elected 2024 — term through 2028',
+        links: null
       },
     ]
   },
-
   'Hays': {
     fips: '48209', pop: '~241,067',
     officials: [
@@ -616,7 +900,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Ruben Becerra', office: 'County Judge (incumbent 2025)', party: 'D', tier: 'B',
+        name: 'Ruben Becerra', photo: null, office: 'County Judge (incumbent 2025)', party: 'D', tier: 'B',
         status: 'vacating', note: 'Lost Dem primary 2026 to Michelle Gutierrez Cohen',
         links: {
           web: 'https://www.hayscountytx.gov/federal-state-and-county',
@@ -625,7 +909,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Michelle Gutierrez Cohen', office: 'County Judge — Dem primary winner', party: 'D', tier: 'B',
+        name: 'Michelle Gutierrez Cohen', photo: null, office: 'County Judge — Dem primary winner', party: 'D', tier: 'B',
         status: 'incoming', note: 'Won Dem primary · faces R Geoffrey Tahuahua in Nov. · result uncertain — verify',
         links: {
           web: null,
@@ -634,8 +918,8 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Kelly Higgins', office: 'District Attorney (outgoing)', party: 'D', tier: 'B',
-        status: 'vacating', note: 'Did not file for re-election — successor TBD',
+        name: 'Kelly Higgins', photo: null, office: 'District Attorney (outgoing)', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Not seeking re-election — Alfonso Salazar is Dem nominee',
         links: {
           web: 'https://www.hayscountytx.gov/federal-state-and-county',
           ballotpedia: null,
@@ -660,14 +944,93 @@ const COUNTIES = {
           results: null
         }
       },
+      {
+        name: 'Rebecca Bell-Metereau', photo: null, office: 'SBOE Member, District 5', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Sitting SBOE member — not seeking re-election',
+        links: null
+      },
+      {
+        name: 'Allison Bush', photo: null, office: 'SBOE District 5 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Won May runoff — faces Mica Arellano (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Debbie Gonzales Ingalsbe', photo: null, office: 'Commissioner, Precinct 1', party: 'D', tier: 'B',
+        status: 'incumbent', note: 'Re-elected 2024 — term through 2028',
+        links: null
+      },
+      {
+        name: 'Alfonso O. Salazar', photo: null, office: 'Criminal District Attorney — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Won primary 54.5%',
+        links: null
+      },
+      {
+        name: 'Cassie Benoist-Templeton', photo: null, office: '428th District Judge — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Won primary 66.5%',
+        links: null
+      },
+      {
+        name: 'Jimmy Alan Hall', photo: null, office: 'County Court-at-Law #1 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee',
+        links: null
+      },
+      {
+        name: 'Chris Johnson', photo: null, office: 'County Court-at-Law #2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Won May runoff — faces Charmaine Wilde (R)',
+        links: null
+      },
+      {
+        name: 'Cynthia A. Millonzi', photo: null, office: 'County Clerk — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Won May runoff',
+        links: null
+      },
+      {
+        name: 'Amanda K. Calvert', photo: null, office: 'District Clerk — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee',
+        links: null
+      },
+      {
+        name: 'Daphne Sanchez Tenorio', photo: null, office: 'County Treasurer — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee',
+        links: null
+      },
+      {
+        name: 'Johnny Flores', photo: null, office: 'Commissioner Pct 2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Won primary 72.6% — open seat (Gutierrez Cohen ran for County Judge)',
+        links: null
+      },
+      {
+        name: 'Angie Unger', photo: null, office: 'Commissioner Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Won primary 50.5%',
+        links: null
+      },
+      {
+        name: 'Maggie Hernandez Moreno', photo: null, office: 'JP Pct 1 Pl 2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Won primary 75.5%',
+        links: null
+      },
+      {
+        name: 'Beth Smith', photo: null, office: 'Justice of the Peace, Pct 2 Pl 1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot',
+        links: null
+      },
+      {
+        name: 'Sandra Bryant', photo: null, office: 'JP Pct 5 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee',
+        links: null
+      },
+      {
+        name: 'Merrie Fox', photo: null, office: 'State Rep. nominee, HD 73', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Carrie Isaac (R)',
+        links: null
+      },
     ]
   },
-
   'Bell': {
     fips: '48027', pop: '~402,248',
     officials: [
       {
-        name: 'Joseph Solomon', office: 'Mayor, Killeen', party: 'NP', tier: 'B',
+        name: 'Joseph Solomon', photo: null, office: 'Mayor, Killeen', party: 'NP', tier: 'B',
         status: 'incumbent', note: 'Elected May 2026 · nonpartisan city election',
         links: {
           web: 'https://www.killeentexas.gov/153/City-Council',
@@ -676,16 +1039,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Jon Burrows', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: {
-          web: 'https://www.bellcountytx.com/county_government/county_judge/index.php',
-          ballotpedia: null,
-          results: null
-        }
-      },
-      {
-        name: 'Stephanie Newell', office: 'District Attorney', party: 'R', tier: 'B',
+        name: 'Stephanie Newell', photo: null, office: 'District Attorney', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Elected Nov. 2024, took office Jan. 2025',
         links: {
           web: 'https://www.bellcountytx.com/county_government/district_attorney/index.php',
@@ -694,7 +1048,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Bill Cooke', office: 'County Sheriff', party: 'R', tier: 'B',
+        name: 'Bill Cooke', photo: null, office: 'County Sheriff', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://www.bellcountytx.com/county_government/sheriff/',
@@ -703,20 +1057,11 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Brad Buckley', office: 'State Rep., HD 54', party: 'R', tier: 'B',
+        name: 'Brad Buckley', photo: null, office: 'State Rep., HD 54', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://house.texas.gov/members/member-page/?district=54',
           ballotpedia: 'https://ballotpedia.org/Brad_Buckley',
-          results: null
-        }
-      },
-      {
-        name: 'Wanda Hickland', office: 'State Rep., HD 55', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify first name — listed as Hickland per 89th Leg. records',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=55',
-          ballotpedia: null,
           results: null
         }
       },
@@ -730,18 +1075,72 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Tim Davis', office: 'Mayor, Temple', party: 'NP', tier: 'B',
+        name: 'Tim Davis', photo: null, office: 'Mayor, Temple', party: 'NP', tier: 'B',
         status: 'incumbent', note: 'Verify current status — Temple uses nonpartisan elections',
         links: { web: 'https://www.templetx.gov/government/city-council', ballotpedia: null, results: null }
       },
+      {
+        name: 'David Blackburn', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Hillary Hickland', photo: null, office: 'State Rep., HD 55', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Joe P. Herrera', photo: null, office: 'State Senate nominee, SD 24', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Pete Flores (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Dawn Richardson', photo: null, office: 'State Rep. nominee, HD 54', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Brad Buckley (R)',
+        links: null
+      },
+      {
+        name: 'Amelia Rabroker', photo: null, office: 'State Rep. nominee, HD 55', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Hillary Hickland (R)',
+        links: null
+      },
+      {
+        name: 'Stacey Wilson', photo: null, office: 'Commissioner Pct 2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee',
+        links: null
+      },
+      {
+        name: 'Ernest Wilkerson', photo: null, office: 'Commissioner Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Defeated incumbent Louie Minor in Dem primary 64.6%',
+        links: null
+      },
+      {
+        name: 'Louie Minor', photo: null, office: 'Commissioner, Precinct 4', party: 'D', tier: 'C',
+        status: 'vacating', note: 'Lost Dem primary — term ends Dec 2026',
+        links: null
+      },
+      {
+        name: 'Claudia Brown', photo: null, office: 'Justice of the Peace, Pct 4 Pl 1', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Term through 2028',
+        links: null
+      },
+      {
+        name: 'Nicola James', photo: null, office: 'Justice of the Peace, Pct 4 Pl 2', party: 'D', tier: 'C',
+        status: 'vacating', note: 'Lost Dem primary (3rd place) — term ends 2026',
+        links: null
+      },
+      {
+        name: 'Jessica Gonzalez', photo: null, office: 'JP Pct 4 Pl 2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Killeen councilwoman; won May runoff 51.3% — faces Beatrice Cox (R)',
+        links: null
+      },
     ]
   },
-
   'McLennan': {
     fips: '48309', pop: '~260,000',
     officials: [
       {
-        name: 'Jim Holmes', office: 'Mayor, Waco', party: 'NP', tier: 'B',
+        name: 'Jim Holmes', photo: null, office: 'Mayor, Waco', party: 'NP', tier: 'B',
         status: 'incumbent', note: 'Re-elected May 2026 · nonpartisan election',
         links: {
           web: 'https://www.waco-texas.com/Government/City-Council/Mayor',
@@ -750,8 +1149,8 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Scott Felton', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent',
+        name: 'Scott Felton', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'vacating', note: 'Retiring end of 2026 — Rick Tullis won R primary',
         links: {
           web: 'https://www.mclennan.gov/534/County-Judge',
           ballotpedia: null,
@@ -759,7 +1158,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Parnell McNamara', office: 'County Sheriff', party: 'R', tier: 'B',
+        name: 'Parnell McNamara', photo: null, office: 'County Sheriff', party: 'R', tier: 'B',
         status: 'incumbent', note: '⚠ Under special prosecutor investigation (May 2025) — verify current status',
         links: {
           web: 'https://www.co.mclennan.tx.us/sheriff',
@@ -768,7 +1167,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Josh Tetens', office: 'District Attorney', party: 'R', tier: 'B',
+        name: 'Josh Tetens', photo: null, office: 'District Attorney', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://www.mclennan.gov/282/District-Attorney',
@@ -777,25 +1176,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify full name against 89th Leg. roster',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=13',
-          ballotpedia: null,
-          results: null
-        }
-      },
-      {
-        name: 'Curry (HD 56)', office: 'State Rep., HD 56', party: 'R', tier: 'B',
-        status: 'incumbent', note: '⚠ First name unconfirmed — verify against 89th Leg. official roster',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=56',
-          ballotpedia: null,
-          results: null
-        }
-      },
-      {
-        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        name: 'Brian Birdwell', photo: null, office: 'State Senator, SD 22', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://senate.texas.gov/member.php?d=22',
@@ -803,14 +1184,68 @@ const COUNTIES = {
           results: null
         }
       },
+      {
+        name: 'Angelia Orr', photo: null, office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Pat Curry', photo: null, office: 'State Rep., HD 56', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Amy Martinez-Salas', photo: null, office: 'State Senate nominee, SD 22', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges David Cook (R) for Birdwell\'s open seat',
+        links: null
+      },
+      {
+        name: 'Albert Hunter', photo: null, office: 'State Rep. nominee, HD 13', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Angelia Orr (R)',
+        links: null
+      },
+      {
+        name: 'Ashley Bean Thornton', photo: null, office: 'State Rep. nominee, HD 56', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Pat Curry (R)',
+        links: null
+      },
+      {
+        name: 'Amy Taylor', photo: null, office: 'SBOE District 14 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — faces Mindy Bumgarner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Jeremy Davis', photo: null, office: 'Commissioner Pct 2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Waco ISD trustee; won primary 51.7% — faces incumbent D.L. Wilson (R)',
+        links: null
+      },
+      {
+        name: 'James E. Lee Jr.', photo: null, office: 'Justice of the Peace, Pct 2', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Unopposed in Dem primary; on Nov ’26 ballot',
+        links: null
+      },
+      {
+        name: 'LucyAnn Sanchez-Miramontez', photo: null, office: 'Justice of the Peace, Pct 5', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'May runoff vs Leslie Edwards — verify winner · no GOP candidate filed',
+        links: null
+      },
+      {
+        name: 'Alfred Freeman / Reggie Jackson', photo: null, office: 'Constable Pct 2 — Dem primary winner', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Both candidates Democrats; no GOP filed — verify primary winner (seat open, Johnson retiring)',
+        links: null
+      },
+      {
+        name: 'Freddie Cantu', photo: null, office: 'Constable Pct 5 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Unopposed in Dem primary',
+        links: null
+      },
     ]
   },
-
   'Brazos': {
     fips: '48041', pop: '~233,849',
     officials: [
       {
-        name: 'Duane Peters', office: 'County Judge', party: 'R', tier: 'B',
+        name: 'Duane Peters', photo: null, office: 'County Judge', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://www.brazoscountytx.gov/97/County-Judge',
@@ -819,7 +1254,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Jarvis Parsons', office: 'District Attorney', party: 'R', tier: 'B',
+        name: 'Jarvis Parsons', photo: null, office: 'District Attorney', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://www.brazoscountytx.gov/da',
@@ -828,24 +1263,6 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
-        status: 'incumbent', note: '⚠ First name unconfirmed — verify against 89th Leg. roster',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=12',
-          ballotpedia: null,
-          results: null
-        }
-      },
-      {
-        name: 'John Dyson', office: 'State Rep., HD 14', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify — listed as Dyson per 89th Leg. records',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=14',
-          ballotpedia: null,
-          results: null
-        }
-      },
-      {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
@@ -855,26 +1272,56 @@ const COUNTIES = {
         }
       },
       {
-        name: 'John Nichols', office: 'Mayor, College Station', party: 'NP', tier: 'B',
+        name: 'John Nichols', photo: null, office: 'Mayor, College Station', party: 'NP', tier: 'B',
         status: 'incumbent', note: 'Verify current status — nonpartisan election',
         links: { web: 'https://www.cstx.gov/government/city_council', ballotpedia: null, results: null }
       },
+      {
+        name: 'Trey Wharton', photo: null, office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Paul Dyson', photo: null, office: 'State Rep., HD 14', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Andie Ho', photo: null, office: 'State Rep. nominee, HD 12', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Trey Wharton (R)',
+        links: null
+      },
+      {
+        name: 'Janet Dudding', photo: null, office: 'State Rep. nominee, HD 14', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Paul Dyson (R)',
+        links: null
+      },
+      {
+        name: 'Wanda J. Watson', photo: null, office: 'Commissioner, Precinct 4', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Elected 2022; on Nov ’26 ballot vs Ruben Michelena (R)',
+        links: null
+      },
+      {
+        name: 'Darrell Booker', photo: null, office: 'JP Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Unopposed in Dem primary',
+        links: null
+      },
+      {
+        name: 'Hezekiah Carter Jr.', photo: null, office: 'Constable Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Unopposed in Dem primary',
+        links: null
+      },
     ]
   },
-
   'Bastrop': {
     fips: '48021', pop: '~118,908',
     officials: [
       {
-        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Also covers Caldwell, Lee, Milam, Burleson counties',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=17',
-          ballotpedia: null,
-          results: null
-        }
-      },
-      {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
@@ -884,16 +1331,7 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Paul Pape', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: {
-          web: 'https://www.co.bastrop.tx.us/judge',
-          ballotpedia: null,
-          results: null
-        }
-      },
-      {
-        name: 'Maurice Cook', office: 'County Sheriff', party: 'R', tier: 'B',
+        name: 'Maurice Cook', photo: null, office: 'County Sheriff', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://www.co.bastrop.tx.us/sheriff',
@@ -901,9 +1339,58 @@ const COUNTIES = {
           results: null
         }
       },
+      {
+        name: 'Stan Gerdes', photo: null, office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Gregory Klaus', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'County judge since Jan 2023; faces Dem Dock Jackson in Nov',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Mary Elizabeth Klenz', photo: null, office: 'State Rep. nominee, HD 17', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Stan Gerdes (R)',
+        links: null
+      },
+      {
+        name: 'Rebecca Bell-Metereau', photo: null, office: 'SBOE Member, District 5', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Sitting SBOE member — not seeking re-election',
+        links: null
+      },
+      {
+        name: 'Allison Bush', photo: null, office: 'SBOE District 5 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Won May runoff — faces Mica Arellano (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Dock Jackson', photo: null, office: 'County Judge — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Longtime Bastrop councilman; unopposed in Dem primary',
+        links: null
+      },
+      {
+        name: 'Tamera Peterson McIntyre', photo: null, office: 'JP Pct 1 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces Cindy Allen (R)',
+        links: null
+      },
+      {
+        name: 'Ruth Todd', photo: null, office: 'JP Pct 2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces Zachary Carter (R)',
+        links: null
+      },
+      {
+        name: 'Rachel Turman-Smith', photo: null, office: 'JP Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces Larry Dunne (R)',
+        links: null
+      },
     ]
   },
-
   'Caldwell': {
     fips: '48055', pop: '~45,883',
     officials: [
@@ -917,32 +1404,67 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=17',
-          ballotpedia: null,
-          results: null
-        }
+        name: 'Hoppy Haden', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Won R primary over Ken Schawe; faces Dem John Castillo in Nov',
+        links: { web: null, ballotpedia: null, results: null }
       },
       {
-        name: 'Hoppy Haden', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Stan Gerdes', photo: null, office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Mary Elizabeth Klenz', photo: null, office: 'State Rep. nominee, HD 17', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Stan Gerdes (R)',
+        links: null
+      },
+      {
+        name: 'Rebecca Bell-Metereau', photo: null, office: 'SBOE Member, District 5', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Sitting SBOE member — not seeking re-election',
+        links: null
+      },
+      {
+        name: 'Allison Bush', photo: null, office: 'SBOE District 5 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Won May runoff — faces Mica Arellano (R) in Nov',
+        links: null
+      },
+      {
+        name: 'John G. Castillo', photo: null, office: 'County Judge — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Lockhart councilman; unopposed in Dem primary',
+        links: null
+      },
+      {
+        name: 'Fred H. Weber', photo: null, office: 'Criminal District Attorney', party: 'D', tier: 'B',
+        status: 'incumbent', note: 'On Nov ’26 ballot',
+        links: null
+      },
+      {
+        name: 'Teresa Rodriguez', photo: null, office: 'County Clerk', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot',
+        links: null
+      },
+      {
+        name: 'Dyral Thomas', photo: null, office: 'Commissioner, Precinct 4', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot vs Rob Ortiz (R)',
+        links: null
+      },
+      {
+        name: 'Anita Deleon', photo: null, office: 'Justice of the Peace, Pct 3', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot vs Alma Morales (R)',
+        links: null
+      },
+      {
+        name: 'Yvette M. Mireles', photo: null, office: 'Justice of the Peace, Pct 4', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'On Nov ’26 ballot',
+        links: null
       },
     ]
   },
-
   'Grimes': {
     fips: '48185', pop: '~30,000',
     officials: [
       {
-        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
-        status: 'incumbent', note: '⚠ First name unconfirmed',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
-      },
-      {
-        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        name: 'Lois Kolkhorst', photo: null, office: 'State Senator, SD 18', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Also covers Burleson, Fayette, Lee, Washington',
         links: {
           web: 'https://senate.texas.gov/member.php?d=18',
@@ -951,23 +1473,47 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Joe Fauth', office: 'County Judge', party: 'R', tier: 'B',
+        name: 'Joe Fauth', photo: null, office: 'County Judge', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Verify current status',
         links: { web: null, ballotpedia: null, results: null }
       },
+      {
+        name: 'Trey Wharton', photo: null, office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Erica Gillum', photo: null, office: 'State Senate nominee, SD 18', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Lois Kolkhorst (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Andie Ho', photo: null, office: 'State Rep. nominee, HD 12', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Trey Wharton (R)',
+        links: null
+      },
+      {
+        name: 'Dana Van De Walker', photo: null, office: 'SBOE District 8 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Faces incumbent Audrey Young (R)',
+        links: null
+      },
+      {
+        name: 'Taylor Jean Perry', photo: null, office: 'Commissioner Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Unopposed in Dem primary',
+        links: null
+      },
     ]
   },
-
   'Washington': {
     fips: '48477', pop: '~35,000',
     officials: [
       {
-        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        name: 'Wharton (HD 12)', photo: null, office: 'State Rep., HD 12', party: 'R', tier: 'B',
         status: 'incumbent', note: '⚠ First name unconfirmed',
         links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
       },
       {
-        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        name: 'Lois Kolkhorst', photo: null, office: 'State Senator, SD 18', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://senate.texas.gov/member.php?d=18',
@@ -976,25 +1522,25 @@ const COUNTIES = {
         }
       },
       {
-        name: 'John Brieden', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'John Durrenberger', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Erica Gillum', photo: null, office: 'State Senate nominee, SD 18', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Lois Kolkhorst (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Andie Ho', photo: null, office: 'State Rep. nominee, HD 12', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Trey Wharton (R)',
+        links: null
       },
     ]
   },
-
   'Coryell': {
     fips: '48099', pop: '~83,093',
     officials: [
-      {
-        name: 'Ernest Slawson', office: 'State Rep., HD 59', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Also covers Hamilton, Hood, Erath counties',
-        links: {
-          web: 'https://house.texas.gov/members/member-page/?district=59',
-          ballotpedia: null,
-          results: null
-        }
-      },
       {
         name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24', party: 'R', tier: 'B',
         status: 'incumbent',
@@ -1005,23 +1551,37 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Roger Miller', office: 'County Judge', party: 'R', tier: 'B',
+        name: 'Roger Miller', photo: null, office: 'County Judge', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Verify current status',
         links: { web: null, ballotpedia: null, results: null }
       },
+      {
+        name: 'Shelby Slawson', photo: null, office: 'State Rep., HD 59', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Joe P. Herrera', photo: null, office: 'State Senate nominee, SD 24', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Pete Flores (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Andrew Turner', photo: null, office: 'State Rep. nominee, HD 59', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Shelby Slawson (R)',
+        links: null
+      },
+      {
+        name: 'Amy Taylor', photo: null, office: 'SBOE District 14 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — faces Mindy Bumgarner (R) in Nov',
+        links: null
+      },
     ]
   },
-
   'Hill': {
     fips: '48217', pop: '~36,000',
     officials: [
       {
-        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Also covers Bosque, Falls, Freestone, Leon, Limestone, McLennan (part)',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
-      },
-      {
-        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        name: 'Brian Birdwell', photo: null, office: 'State Senator, SD 22', party: 'R', tier: 'B',
         status: 'incumbent',
         links: {
           web: 'https://senate.texas.gov/member.php?d=22',
@@ -1030,13 +1590,27 @@ const COUNTIES = {
         }
       },
       {
-        name: 'Justin Lewis', office: 'County Judge', party: 'R', tier: 'B',
+        name: 'Justin Lewis', photo: null, office: 'County Judge', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Verify current status',
         links: { web: null, ballotpedia: null, results: null }
       },
+      {
+        name: 'Angelia Orr', photo: null, office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Amy Martinez-Salas', photo: null, office: 'State Senate nominee, SD 22', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges David Cook (R) for Birdwell\'s open seat',
+        links: null
+      },
+      {
+        name: 'Albert Hunter', photo: null, office: 'State Rep. nominee, HD 13', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Angelia Orr (R)',
+        links: null
+      },
     ]
   },
-
   'Burnet': {
     fips: '48053', pop: '~49,000',
     officials: [
@@ -1051,270 +1625,412 @@ const COUNTIES = {
         links: { web: 'https://senate.texas.gov/member.php?d=24', ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)', results: null }
       },
       {
-        name: 'James Oakley', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Bryan Wilson', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Joe P. Herrera', photo: null, office: 'State Senate nominee, SD 24', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Pete Flores (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Kelly Hall', photo: null, office: 'State Rep. nominee, HD 19', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Ellen Troxclair (R)',
+        links: null
       },
     ]
   },
-
   'Fayette': {
     fips: '48149', pop: '~24,000',
     officials: [
       {
-        name: 'Kitzman (HD 85)', office: 'State Rep., HD 85', party: 'R', tier: 'B',
-        status: 'incumbent', note: '⚠ First name unconfirmed — verify against 89th Leg. official roster',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=85', ballotpedia: null, results: null }
-      },
-      {
-        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        name: 'Lois Kolkhorst', photo: null, office: 'State Senator, SD 18', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=18', ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst', results: null }
       },
       {
-        name: 'Joe Schultz', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Stan Kitzman', photo: null, office: 'State Rep., HD 85', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Dan Mueller', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Erica Gillum', photo: null, office: 'State Senate nominee, SD 18', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Lois Kolkhorst (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Lawrence Brandyburg', photo: null, office: 'State Rep. nominee, HD 85', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Stan Kitzman (R)',
+        links: null
       },
     ]
   },
-
   'Limestone': {
     fips: '48293', pop: '~22,000',
     officials: [
-      {
-        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
-      },
       {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
       },
       {
-        name: 'Richard Duncan', office: 'County Judge', party: 'R', tier: 'B',
+        name: 'Richard Duncan', photo: null, office: 'County Judge', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Verify current status',
         links: { web: null, ballotpedia: null, results: null }
       },
+      {
+        name: 'Angelia Orr', photo: null, office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Albert Hunter', photo: null, office: 'State Rep. nominee, HD 13', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Angelia Orr (R)',
+        links: null
+      },
     ]
   },
-
   'Llano': {
     fips: '48299', pop: '~21,000',
     officials: [
-      {
-        name: 'John Virdell', office: 'State Rep., HD 53', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify — listed as Virdell per 89th Leg. records',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=53', ballotpedia: null, results: null }
-      },
       {
         name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=24', ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)', results: null }
       },
       {
-        name: 'Ron Cunningham', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
+        name: 'Ron Cunningham', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Not seeking re-election — new judge elected Nov 2026',
         links: { web: null, ballotpedia: null, results: null }
+      },
+      {
+        name: 'Wes Virdell', photo: null, office: 'State Rep., HD 53', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Joe P. Herrera', photo: null, office: 'State Senate nominee, SD 24', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Pete Flores (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Kathryn Hartmann', photo: null, office: 'State Rep. nominee, HD 53', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Wes Virdell (R)',
+        links: null
+      },
+      {
+        name: 'Leila Green Little', photo: null, office: 'Commissioner Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces incumbent Jerry Don Moss (R)',
+        links: null
       },
     ]
   },
-
   'Burleson': {
     fips: '48051', pop: '~18,657',
     officials: [
       {
-        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=17', ballotpedia: null, results: null }
-      },
-      {
-        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        name: 'Lois Kolkhorst', photo: null, office: 'State Senator, SD 18', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=18', ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst', results: null }
       },
       {
-        name: 'Mike Sutherland', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Stan Gerdes', photo: null, office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Keith Schroeder', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Erica Gillum', photo: null, office: 'State Senate nominee, SD 18', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Lois Kolkhorst (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Mary Elizabeth Klenz', photo: null, office: 'State Rep. nominee, HD 17', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Stan Gerdes (R)',
+        links: null
       },
     ]
   },
-
   'Bosque': {
     fips: '48035', pop: '~18,697',
     officials: [
       {
-        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
-      },
-      {
-        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        name: 'Brian Birdwell', photo: null, office: 'State Senator, SD 22', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=22', ballotpedia: 'https://ballotpedia.org/Brian_Birdwell', results: null }
       },
       {
-        name: 'Cindy Lee Bart', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Angelia Orr', photo: null, office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Cindy Vanlandingham', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Amy Martinez-Salas', photo: null, office: 'State Senate nominee, SD 22', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges David Cook (R) for Birdwell\'s open seat',
+        links: null
+      },
+      {
+        name: 'Albert Hunter', photo: null, office: 'State Rep. nominee, HD 13', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Angelia Orr (R)',
+        links: null
+      },
+      {
+        name: 'Amy Taylor', photo: null, office: 'SBOE District 14 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — faces Mindy Bumgarner (R) in Nov',
+        links: null
       },
     ]
   },
-
   'Milam': {
     fips: '48331', pop: '~25,000',
     officials: [
       {
-        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=17', ballotpedia: null, results: null }
-      },
-      {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
       },
       {
-        name: 'Steve Young', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Stan Gerdes', photo: null, office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Bill Whitmire', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Mary Elizabeth Klenz', photo: null, office: 'State Rep. nominee, HD 17', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Stan Gerdes (R)',
+        links: null
       },
     ]
   },
-
   'Robertson': {
     fips: '48395', pop: '~17,000',
     officials: [
       {
-        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
-        status: 'incumbent', note: '⚠ First name unconfirmed',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
-      },
-      {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
       },
       {
-        name: 'Ty Prause', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Trey Wharton', photo: null, office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Joe David Scarpinato', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Andie Ho', photo: null, office: 'State Rep. nominee, HD 12', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Trey Wharton (R)',
+        links: null
+      },
+      {
+        name: 'James Taylor', photo: null, office: 'Commissioner Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces R primary winner (Czajkowski/Yezak) — verify if incumbent',
+        links: null
+      },
+      {
+        name: 'Fredrick Webber', photo: null, office: 'JP Pct 4 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces Debbie Zan (R) — verify if incumbent',
+        links: null
       },
     ]
   },
-
   'Freestone': {
     fips: '48161', pop: '~19,000',
     officials: [
       {
-        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
-      },
-      {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
       },
       {
-        name: 'Linda Grant', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
+        name: 'Linda Grant', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'vacating', note: 'Not seeking re-election — R primary picked successor path (Looney/Lane/Tyus)',
         links: { web: null, ballotpedia: null, results: null }
+      },
+      {
+        name: 'Angelia Orr', photo: null, office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Albert Hunter', photo: null, office: 'State Rep. nominee, HD 13', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Angelia Orr (R)',
+        links: null
       },
     ]
   },
-
   'Madison': {
     fips: '48313', pop: '~13,000',
     officials: [
       {
-        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
-        status: 'incumbent', note: '⚠ First name unconfirmed',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
-      },
-      {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
       },
       {
-        name: 'Milburn Duer', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Trey Wharton', photo: null, office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Clark Osborne', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Andie Ho', photo: null, office: 'State Rep. nominee, HD 12', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Trey Wharton (R)',
+        links: null
       },
     ]
   },
-
   'Falls': {
     fips: '48145', pop: '~14,000',
     officials: [
       {
-        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
-      },
-      {
-        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        name: 'Brian Birdwell', photo: null, office: 'State Senator, SD 22', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=22', ballotpedia: 'https://ballotpedia.org/Brian_Birdwell', results: null }
       },
       {
-        name: 'Jay Elliott', office: 'County Judge', party: 'R', tier: 'B',
+        name: 'Jay Elliott', photo: null, office: 'County Judge', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Verify current status',
         links: { web: null, ballotpedia: null, results: null }
       },
+      {
+        name: 'Angelia Orr', photo: null, office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Amy Martinez-Salas', photo: null, office: 'State Senate nominee, SD 22', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges David Cook (R) for Birdwell\'s open seat',
+        links: null
+      },
+      {
+        name: 'Albert Hunter', photo: null, office: 'State Rep. nominee, HD 13', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Angelia Orr (R)',
+        links: null
+      },
+      {
+        name: 'F.A. Green Sr.', photo: null, office: 'Commissioner Pct 2 — Dem nominee', party: 'D', tier: 'C',
+        status: 'nominee', note: 'Faces David Fitz (R)',
+        links: null
+      },
     ]
   },
-
   'Leon': {
     fips: '48289', pop: '~16,000',
     officials: [
-      {
-        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
-      },
       {
         name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
       },
       {
-        name: 'Kevin Noack', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Angelia Orr', photo: null, office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Byron Ryder', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Won ’26 R primary vs de la Garza',
+        links: null
+      },
+      {
+        name: 'Paul Thomasson', photo: null, office: 'State Senate nominee, SD 5', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Schwertner (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Albert Hunter', photo: null, office: 'State Rep. nominee, HD 13', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Angelia Orr (R)',
+        links: null
       },
     ]
   },
-
   'Lee': {
     fips: '48287', pop: '~17,000',
     officials: [
       {
-        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
-        status: 'incumbent',
-        links: { web: 'https://house.texas.gov/members/member-page/?district=17', ballotpedia: null, results: null }
-      },
-      {
-        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        name: 'Lois Kolkhorst', photo: null, office: 'State Senator, SD 18', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=18', ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst', results: null }
       },
       {
-        name: 'Paul Fischer', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Stan Gerdes', photo: null, office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Frank Malinak', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Erica Gillum', photo: null, office: 'State Senate nominee, SD 18', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Lois Kolkhorst (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Mary Elizabeth Klenz', photo: null, office: 'State Rep. nominee, HD 17', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Stan Gerdes (R)',
+        links: null
       },
     ]
   },
-
   'Lampasas': {
     fips: '48281', pop: '~21,000',
     officials: [
       {
-        name: 'David Spiller', office: 'State Rep., HD 68', party: 'R', tier: 'B',
+        name: 'David Spiller', photo: null, office: 'State Rep., HD 68', party: 'R', tier: 'B',
         status: 'incumbent', note: 'Also covers San Saba, Mills',
         links: { web: 'https://house.texas.gov/members/member-page/?district=68', ballotpedia: 'https://ballotpedia.org/David_Spiller', results: null }
       },
@@ -1324,13 +2040,22 @@ const COUNTIES = {
         links: { web: 'https://senate.texas.gov/member.php?d=24', ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)', results: null }
       },
       {
-        name: 'Wayne Boultinghouse', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Randall Hoyer', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'vacating', note: 'David Millican won ’26 R primary for the seat',
+        links: null
+      },
+      {
+        name: 'Joe P. Herrera', photo: null, office: 'State Senate nominee, SD 24', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Pete Flores (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Jasmine Henderson', photo: null, office: 'State Rep. nominee, HD 68', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. David Spiller (R)',
+        links: null
       },
     ]
   },
-
   'Blanco': {
     fips: '48031', pop: '~12,000',
     officials: [
@@ -1345,72 +2070,124 @@ const COUNTIES = {
         links: { web: 'https://senate.texas.gov/member.php?d=25', ballotpedia: 'https://ballotpedia.org/Donna_Campbell', results: null }
       },
       {
-        name: 'Connie Magee', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Brett Bray', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Kelly Hall', photo: null, office: 'State Rep. nominee, HD 19', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Ellen Troxclair (R)',
+        links: null
+      },
+      {
+        name: 'Rebecca Bell-Metereau', photo: null, office: 'SBOE Member, District 5', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Sitting SBOE member — not seeking re-election',
+        links: null
+      },
+      {
+        name: 'Allison Bush', photo: null, office: 'SBOE District 5 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Won May runoff — faces Mica Arellano (R) in Nov',
+        links: null
       },
     ]
   },
-
   'San Saba': {
     fips: '48411', pop: '~6,000',
     officials: [
       {
-        name: 'David Spiller', office: 'State Rep., HD 68', party: 'R', tier: 'B',
+        name: 'David Spiller', photo: null, office: 'State Rep., HD 68', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://house.texas.gov/members/member-page/?district=68', ballotpedia: 'https://ballotpedia.org/David_Spiller', results: null }
       },
       {
-        name: 'Charles Perry', office: 'State Senator, SD 28', party: 'R', tier: 'B',
+        name: 'Charles Perry', photo: null, office: 'State Senator, SD 28', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=28', ballotpedia: 'https://ballotpedia.org/Charles_Perry_(Texas)', results: null }
       },
       {
-        name: 'Lora Hicks', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Jody Fauley', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Riley Rodriquez', photo: null, office: 'State Senate nominee, SD 28', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Perry (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Jasmine Henderson', photo: null, office: 'State Rep. nominee, HD 68', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. David Spiller (R)',
+        links: null
       },
     ]
   },
-
   'Hamilton': {
     fips: '48193', pop: '~8,000',
     officials: [
       {
-        name: 'Ernest Slawson', office: 'State Rep., HD 59', party: 'R', tier: 'B',
+        name: 'Ernest Slawson', photo: null, office: 'State Rep., HD 59', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://house.texas.gov/members/member-page/?district=59', ballotpedia: null, results: null }
       },
       {
-        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        name: 'Brian Birdwell', photo: null, office: 'State Senator, SD 22', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=22', ballotpedia: 'https://ballotpedia.org/Brian_Birdwell', results: null }
       },
       {
-        name: 'Justin Dickerson', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'James Yates', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Amy Martinez-Salas', photo: null, office: 'State Senate nominee, SD 22', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges David Cook (R) for Birdwell\'s open seat',
+        links: null
+      },
+      {
+        name: 'Andrew Turner', photo: null, office: 'State Rep. nominee, HD 59', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. Shelby Slawson (R)',
+        links: null
+      },
+      {
+        name: 'Amy Taylor', photo: null, office: 'SBOE District 14 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — faces Mindy Bumgarner (R) in Nov',
+        links: null
       },
     ]
   },
-
   'Mills': {
     fips: '48333', pop: '~5,000',
     officials: [
       {
-        name: 'David Spiller', office: 'State Rep., HD 68', party: 'R', tier: 'B',
+        name: 'David Spiller', photo: null, office: 'State Rep., HD 68', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://house.texas.gov/members/member-page/?district=68', ballotpedia: 'https://ballotpedia.org/David_Spiller', results: null }
       },
       {
-        name: 'Charles Perry', office: 'State Senator, SD 28', party: 'R', tier: 'B',
+        name: 'Charles Perry', photo: null, office: 'State Senator, SD 28', party: 'R', tier: 'B',
         status: 'incumbent',
         links: { web: 'https://senate.texas.gov/member.php?d=28', ballotpedia: 'https://ballotpedia.org/Charles_Perry_(Texas)', results: null }
       },
       {
-        name: 'Tim Sloane', office: 'County Judge', party: 'R', tier: 'B',
-        status: 'incumbent', note: 'Verify current status',
-        links: { web: null, ballotpedia: null, results: null }
+        name: 'Jett Johnson', photo: null, office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: null
+      },
+      {
+        name: 'Riley Rodriquez', photo: null, office: 'State Senate nominee, SD 28', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — challenges Sen. Charles Perry (R) in Nov',
+        links: null
+      },
+      {
+        name: 'Jasmine Henderson', photo: null, office: 'State Rep. nominee, HD 68', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee vs Rep. David Spiller (R)',
+        links: null
+      },
+      {
+        name: 'Amy Taylor', photo: null, office: 'SBOE District 14 — Dem nominee', party: 'D', tier: 'B',
+        status: 'nominee', note: 'Dem nominee — faces Mindy Bumgarner (R) in Nov',
+        links: null
       },
     ]
   },
@@ -1445,7 +2222,7 @@ document.querySelectorAll('#party-filters .filter-btn').forEach(btn => {
 
 const PARTY_ORDER = { D: 0, I: 1, NP: 2, R: 3 };
 const TIER_ORDER  = { B: 0, C: 1 };
-const STATUS_ORDER = { incumbent: 0, vacating: 1, incoming: 2 };
+const STATUS_ORDER = { incumbent: 0, vacating: 1, incoming: 2, nominee: 3 };
 
 function sortOfficials(officials) {
   return [...officials].sort((a, b) => {
@@ -1492,12 +2269,15 @@ function renderCards(officials) {
       const pc = { D: 'dem', R: 'rep', I: 'ind', NP: 'np' }[o.party] || 'np';
       const isIncoming = o.status === 'incoming';
       const isVacating = o.status === 'vacating';
+      const isNominee  = o.status === 'nominee';
       const cardClass = `official-card ${pc}-card${isIncoming ? ' incoming-card' : ''}`;
       const nameClass = `card-name${isIncoming ? ' incoming-name' : ''}`;
       const statusBadge = isIncoming
         ? `<span style="font-size:0.6rem;background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:10px;font-weight:600;white-space:nowrap">↑ INCOMING</span>`
         : isVacating
         ? `<span style="font-size:0.6rem;background:#fff7ed;color:#c2410c;padding:1px 6px;border-radius:10px;font-weight:600;white-space:nowrap">↗ VACATING</span>`
+        : isNominee
+        ? `<span style="font-size:0.6rem;background:#f3e8ff;color:#7e22ce;padding:1px 6px;border-radius:10px;font-weight:600;white-space:nowrap">☑ ’26 NOMINEE</span>`
         : '';
       const noteClass = isIncoming ? 'card-note incoming-note' : isVacating ? 'card-note vacating-note' : 'card-note';
       const didx = DETAIL_DATA.push(o) - 1;
