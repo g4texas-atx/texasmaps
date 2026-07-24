@@ -1,0 +1,5 @@
+_to_delete/
+.~lock*
+*.lock
+testwrite.tmp
+.DS_Store
