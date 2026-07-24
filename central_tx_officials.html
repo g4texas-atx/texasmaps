@@ -70,7 +70,14 @@ header .subtitle { font-size: 0.72rem; color: #64748b; font-weight: 400; }
 
 .county-bg   { fill: #dde6f0; stroke: #b0c4de; stroke-width: 0.4; }
 .county-central { fill: #bfdbfe; stroke: #60a5fa; stroke-width: 0.8; cursor: pointer; }
+.county-dem-local { fill: #3b82f6; stroke: #1d4ed8; }
+.county-dem-district { fill: #bfdbfe; stroke: #60a5fa; }
+.county-dem-none { fill: #e2e8f0; stroke: #94a3b8; }
 .county-central:hover { fill: #93c5fd; stroke: #3b82f6; stroke-width: 1.2; }
+.county-dem-local.county-selected, .county-dem-district.county-selected, .county-dem-none.county-selected { fill: #1e40af; }
+.county-label-onlocal { fill: #ffffff !important; }
+.dem-count-label { font-size: 6px; font-weight: 600; fill: #1e3a8a; text-anchor: middle; pointer-events: none; }
+.dem-count-onlocal { fill: #dbeafe; }
 .county-selected { fill: #2563eb !important; stroke: #1d4ed8 !important; stroke-width: 1.5 !important; }
 .state-border { fill: none; stroke: #334155; stroke-width: 2; }
 
@@ -245,9 +252,11 @@ header .subtitle { font-size: 0.72rem; color: #64748b; font-weight: 400; }
     </div>
     <div class="map-legend">
       <div class="legend-title">Legend</div>
-      <div class="legend-row"><div class="legend-swatch" style="background:#bfdbfe;border:1px solid #60a5fa"></div>AUS/CenTex Region 4 (30 counties)</div>
-      <div class="legend-row"><div class="legend-swatch" style="background:#2563eb;border:1px solid #1d4ed8"></div>Selected county</div>
-      <div class="legend-row"><div class="legend-swatch" style="background:#dde6f0;border:1px solid #b0c4de"></div>Other TX counties</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#3b82f6;border:1px solid #1d4ed8"></div>County-level Dems (call first)</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#bfdbfe;border:1px solid #60a5fa"></div>District-level Dem nominees only</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#e2e8f0;border:1px solid #94a3b8"></div>No Democrats on card</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#1e40af;border:1px solid #1e3a8a"></div>Selected county</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#dde6f0;border:1px solid #b0c4de"></div>Outside Region 4</div>
       <div style="margin-top:6px;color:#94a3b8;font-size:0.65rem">Scroll or pinch to zoom · drag to pan</div>
     </div>
     <div class="map-overlay-hint" id="map-hint">Click a highlighted county to view officials</div>
@@ -2199,6 +2208,25 @@ const FIPS_TO_COUNTY = {};
 Object.entries(COUNTIES).forEach(([name, d]) => { FIPS_TO_COUNTY[d.fips] = name; });
 const CENTRAL_FIPS = new Set(Object.values(COUNTIES).map(d => d.fips));
 
+// ── DEM PRESENCE CLASSIFICATION ─────────────────────────────
+// countyLevelDem: a Democrat holding or seeking a COUNTY office (not a state-leg/SBOE district seat)
+function isCountyLevelOffice(office) {
+  return !/State Rep|State Senat|SBOE|State Senate/i.test(office);
+}
+function demStats(countyName) {
+  const offs = (COUNTIES[countyName] || {officials: []}).officials.filter(o => o.party === 'D');
+  const local = offs.filter(o => isCountyLevelOffice(o.office));
+  return { total: offs.length, local: local.length };
+}
+const DEM_CLASS = {};   // fips -> 'local' | 'district' | 'none'
+const DEM_COUNT = {};   // fips -> total Dems
+Object.entries(COUNTIES).forEach(([name, d]) => {
+  const s = demStats(name);
+  DEM_COUNT[d.fips] = s.total;
+  DEM_CLASS[d.fips] = s.local > 0 ? 'local' : (s.total > 0 ? 'district' : 'none');
+});
+
+
 // ── STATE ────────────────────────────────────────────────────────────────────
 
 let selectedCounty = null;
@@ -2332,6 +2360,7 @@ const zoom = d3.zoom()
     const k = event.transform.k;
     // Scale labels so they stay readable at any zoom
     g.selectAll('.county-label').style('font-size', `${8 / Math.sqrt(k)}px`);
+    g.selectAll('.dem-count-label').style('font-size', `${6 / Math.sqrt(k)}px`);
     // Thin strokes at high zoom
     g.selectAll('.county-bg').style('stroke-width', `${0.4 / k}`);
     g.selectAll('.county-central').style('stroke-width', (d) => {
@@ -2393,7 +2422,10 @@ async function initMap() {
   const centralPaths = g.selectAll('.county-central')
     .data(txCounties.features.filter(f => CENTRAL_FIPS.has(f.id.toString().padStart(5,'0'))))
     .join('path')
-    .attr('class', 'county-central')
+    .attr('class', d => {
+      const fips = d.id.toString().padStart(5, '0');
+      return `county-central county-dem-${DEM_CLASS[fips] || 'none'}`;
+    })
     .attr('d', pathGen)
     .on('click', function(event, d) {
       event.stopPropagation();
@@ -2424,13 +2456,30 @@ async function initMap() {
     .attr('class', d => {
       const fips = d.id.toString().padStart(5, '0');
       const isCentral = CENTRAL_FIPS.has(fips);
-      return `county-label lbl-${fips}${isCentral ? ' county-label-central' : ''}`;
+      const onLocal = DEM_CLASS[fips] === 'local' ? ' county-label-onlocal' : '';
+      return `county-label lbl-${fips}${isCentral ? ' county-label-central' : ''}${onLocal}`;
     })
     .attr('x', d => pathGen.centroid(d)[0])
     .attr('y', d => pathGen.centroid(d)[1])
     .text(d => {
       const fips = d.id.toString().padStart(5, '0');
       return FIPS_TO_COUNTY[fips] || '';  // Only label the 30 central counties
+    });
+
+  // Dem-count sub-labels on the 30 region counties
+  g.selectAll('.dem-count-label')
+    .data(txCounties.features.filter(f => CENTRAL_FIPS.has(f.id.toString().padStart(5,'0'))))
+    .join('text')
+    .attr('class', d => {
+      const fips = d.id.toString().padStart(5, '0');
+      return `dem-count-label${DEM_CLASS[fips] === 'local' ? ' dem-count-onlocal' : ''}`;
+    })
+    .attr('x', d => pathGen.centroid(d)[0])
+    .attr('y', d => pathGen.centroid(d)[1] + 7)
+    .text(d => {
+      const fips = d.id.toString().padStart(5, '0');
+      const n = DEM_COUNT[fips] || 0;
+      return n > 0 ? `${n} Dem${n > 1 ? 's' : ''}` : 'no Dems';
     });
 
   // State border
