@@ -124,6 +124,7 @@ header .sub{font-size:.7rem;color:#64748b}
 #ppl-search:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
 #ppl-search::placeholder{color:#94a3b8}
 #ppl-drop{position:absolute;top:40px;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:9px;box-shadow:0 8px 24px rgba(20,27,38,.16);max-height:360px;overflow-y:auto;display:none;z-index:1200}
+path.focus-dist{pointer-events:none}
 path.c-path.search-hit{stroke:#f59e0b !important;stroke-width:2.5px !important;vector-effect:non-scaling-stroke}
 #ppl-drop .grp{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;padding:8px 12px 3px;background:#fafbfd;font-weight:700}
 #ppl-drop .opt{padding:8px 12px;font-size:.8rem;cursor:pointer;border-top:1px solid #f1f3f7;display:flex;align-items:flex-start;gap:9px}
@@ -134,9 +135,10 @@ path.c-path.search-hit{stroke:#f59e0b !important;stroke-width:2.5px !important;v
 #ppl-drop .pbdot{width:9px;height:9px;border-radius:3px;flex:none;margin-top:4px}
 
 /* Official detail pop-up */
-#odetail{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:120;align-items:center;justify-content:center;padding:20px}
+#odetail{display:none;position:fixed;inset:0;background:rgba(15,23,42,.10);z-index:120;align-items:flex-start;justify-content:flex-end;padding:64px 18px 18px}
+@media(max-width:900px){#odetail{align-items:center;justify-content:center;padding:20px}}
 #odetail.on{display:flex}
-.od-card{background:#fff;border-radius:16px;width:min(780px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,.28);border-top:7px solid #94a3b8}
+.od-card{background:#fff;border-radius:16px;width:min(520px,95vw);max-height:calc(100vh - 84px);overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,.28);border-top:7px solid #94a3b8}
 .od-card.D{border-top-color:#2563eb}.od-card.R{border-top-color:#dc2626}.od-card.NP{border-top-color:#94a3b8}.od-card.influential{border-top-color:#7c3aed}
 .od-hd{display:flex;align-items:flex-start;gap:20px;padding:26px 28px 18px}
 .od-photo{width:160px;height:160px;border-radius:16px;object-fit:cover;object-position:center top;flex-shrink:0;background:#e2e8f0;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.16)}
@@ -2224,6 +2226,7 @@ document.getElementById('fn').addEventListener('input',e=>{if(pending)pending.na
 // ══════════════════════════════════════════
 function onCountyClick(event,d){
   if(panMode)return;
+  clearFocus();
   event.stopPropagation();
   if(typeof anyOverlayOn==='function' && anyOverlayOn()){ showDistrictInfo(event); return; }
   const f=d.id.toString().padStart(5,'0');
@@ -2755,6 +2758,7 @@ function placeMatches(q){
   return starts.concat(inside).sort((a,b)=>ord(a)-ord(b)||a.name.localeCompare(b.name)).slice(0,6);
 }
 function jumpToCounty(fips){
+  clearFocus();
   // centre + zoom the map on the county, then load its officials
   try{
     if(g && pathGen && zoom){
@@ -2769,11 +2773,76 @@ function jumpToCounty(fips){
         svg.transition().duration(450).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(k));
         g.selectAll('path.c-path').classed('search-hit',false);
         sel.classed('search-hit',true);
-        setTimeout(()=>sel.classed('search-hit',false),2600);
       }
     }
   }catch(e){}
   showOfficials(fips,{districts:true});
+}
+
+
+/* ─── Focus: zoom the map to the area a person represents ─── */
+let _focusGrp=null;
+function clearFocus(){ if(_focusGrp){_focusGrp.remove();_focusGrp=null;} if(g) g.selectAll('path.c-path').classed('search-hit',false); }
+function _zoomToBounds(b,pad){
+  const [[x0,y0],[x1,y1]]=b; const svgNode=svg.node(); const W=svgNode.clientWidth||900, H=svgNode.clientHeight||600;
+  const k=Math.max(1,Math.min(10,(pad||0.55)/Math.max((x1-x0)/W,(y1-y0)/H)));
+  const tx=W/2-k*(x0+x1)/2, ty=H/2-k*(y0+y1)/2;
+  svg.transition().duration(600).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(k));
+  return k;
+}
+function _projBounds(f){ let x0=1/0,y0=1/0,x1=-1/0,y1=-1/0; _polys(f).forEach(poly=>poly.forEach(ring=>ring.forEach(pt=>{ const q=projection(pt); if(!q)return; if(q[0]<x0)x0=q[0]; if(q[0]>x1)x1=q[0]; if(q[1]<y0)y0=q[1]; if(q[1]>y1)y1=q[1]; }))); return [[x0,y0],[x1,y1]]; }
+function _unionBounds(list){ let x0=1/0,y0=1/0,x1=-1/0,y1=-1/0; list.forEach(b=>{ if(b[0][0]<x0)x0=b[0][0]; if(b[0][1]<y0)y0=b[0][1]; if(b[1][0]>x1)x1=b[1][0]; if(b[1][1]>y1)y1=b[1][1]; }); return [[x0,y0],[x1,y1]]; }
+function districtOfOffice(o){
+  const s=(o||'');
+  let m=s.match(/\bHD\s*(\d{1,3})\b/i); if(m) return {k:'house',n:+m[1]};
+  m=s.match(/\bSD\s*(\d{1,2})\b/i); if(m) return {k:'senate',n:+m[1]};
+  m=s.match(/\bTX-(\d{1,2})\b/i)||s.match(/U\.?S\.? Rep(?:resentative)?\.?[^\d]*?(\d{1,2})\b/i)||s.match(/\bCD\s*(\d{1,2})\b/i); if(m) return {k:'congress2026',n:+m[1]};
+  return null;
+}
+function _distGeo(k){
+  const st=distState[k], L=DLAYERS[k]; if(!st||!L) return Promise.resolve(null);
+  if(st.geo) return Promise.resolve(st.geo);
+  return fetch(L.url).then(r=>r.json()).then(geo=>{st.geo=geo;return geo;}).catch(()=>null);
+}
+function focusCounties(fipsList){
+  clearFocus();
+  const sel=g.selectAll('path.c-path').filter(d=>d&&d.id!==undefined&&fipsList.includes(d.id.toString().padStart(5,'0')));
+  if(!sel.size()) return false;
+  const bs=[]; sel.each(d=>bs.push(pathGen.bounds(d)));
+  _zoomToBounds(_unionBounds(bs),fipsList.length>1?0.7:0.45);
+  sel.classed('search-hit',true);
+  return true;
+}
+function focusDistrict(k,n,col){
+  return _distGeo(k).then(geo=>{
+    if(!geo) return false;
+    const L=DLAYERS[k];
+    const f=geo.features.find(ft=>+ft.properties[L.num]===n);
+    if(!f) return false;
+    clearFocus();
+    _focusGrp=g.append('g').attr('class','focus-grp');
+    _focusGrp.append('path').datum(f).attr('d',pathGen).attr('class','focus-dist')
+      .style('fill',col||L.color).style('fill-opacity',.18).style('stroke',col||L.color).style('stroke-width','2.5px').style('vector-effect','non-scaling-stroke').style('pointer-events','none');
+    _zoomToBounds(_projBounds(f),0.6);
+    return true;
+  });
+}
+function focusPerson(e){
+  // e = PEOPLE_INDEX entry {o, fips, counties, fipsList}
+  const o=e.o||e; const fipsList=e.fipsList||(e.fips?[e.fips]:[]);
+  const d=districtOfOffice(o.o);
+  if(d){
+    return focusDistrict(d.k,d.n).then(ok=>{ if(!ok && fipsList.length) focusCounties(fipsList); return ok; });
+  }
+  if(o.lvl==='Statewide'){
+    // statewide ticket: show the whole state, highlight Region 4
+    clearFocus();
+    svg.transition().duration(600).call(zoom.transform,d3.zoomIdentity);
+    g.selectAll('path.c-path').filter(dd=>dd&&dd.id!==undefined&&REGION4_FIPS.includes(dd.id.toString().padStart(5,'0'))).classed('search-hit',true);
+    return Promise.resolve(true);
+  }
+  // county / city / party / influential: zoom to the county (or counties) they're filed under
+  return Promise.resolve(fipsList.length?focusCounties(fipsList):false);
 }
 
 /* ─── People search (across every county) ─── */
@@ -2856,6 +2925,7 @@ if(_pDrop) _pDrop.addEventListener('click',function(ev){
   (e.fipsList||[]).forEach(ff=>{ if(q.includes((TX[ff]||'').toLowerCase())) f=ff; });
   if(f) showOfficials(f,{districts:true});   // load that county's officials into the panel for context
   _pInput.value='';
+  focusPerson(Object.assign({},e,{fips:f}));   // zoom the map to the district / county they represent
   openOfficialDetail(e.o);            // open the selected person's detail card
 });
 if(_pInput){ _pInput.addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ const first=_pDrop&&_pDrop.querySelector('.opt[data-pidx],.opt[data-idx]'); if(first) first.click(); } if(ev.key==='Escape'){ _pDrop.style.display='none'; } }); }
