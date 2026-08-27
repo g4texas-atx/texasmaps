@@ -50,7 +50,12 @@ aside{border-right:1px solid var(--rule);background:var(--paper2);display:flex;f
 .filters{padding:4px 14px 10px;display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500}
 .chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.chip.off{opacity:.4}
+.chip.off{opacity:.55}
+.chip.on{background:var(--cream);border-color:var(--maroon)}
+.chip[data-hot] i,.chip[data-r4] i{box-shadow:0 0 0 1.5px var(--hot);background:transparent}
+.chip[data-hot].on i{background:var(--hot)}
+.chip[data-r4] i{box-shadow:0 0 0 1.5px var(--olive)}
+.chip[data-r4].on i{background:var(--olive)}
 .chip.hot i{background:var(--hot);box-shadow:0 0 0 2px var(--paper),0 0 0 3px var(--hot)}
 .layers{padding:0 14px 8px;display:flex;gap:12px;font-size:12px;color:var(--ink2)}
 .layers label{display:flex;align-items:center;gap:5px;cursor:pointer}
@@ -159,8 +164,8 @@ button:focus-visible,input:focus-visible,.row:focus-visible{outline:2px solid va
     <button class="chip" data-s="under_construction"><i style="background:var(--uc)"></i>Under construction</button>
     <button class="chip" data-s="proposed"><i style="background:var(--pr)"></i>Proposed</button>
     <button class="chip off" data-s="withdrawn"><i style="background:var(--wd)"></i>Withdrawn</button>
-    <button class="chip hot" data-hot="1"><i></i>Contested only</button>
-    <button class="chip off" data-r4="1"><i style="background:var(--olive)"></i>Region 4 only</button>
+    <button class="chip" data-hot="1"><i></i>Contested only</button>
+    <button class="chip" data-r4="1"><i></i>Region 4 only</button>
   </div>
   <div class="layers">
     <label><input type="checkbox" id="lyr-regions" checked> G4T regions</label>
@@ -315,13 +320,15 @@ function render(){
   const sort=$('sort').value;
   vis.sort((a,b)=>sort==='mw'?(b.mw||0)-(a.mw||0):sort==='name'?a.name.localeCompare(b.name):sort==='county'?a.county.localeCompare(b.county)||(b.mw||0)-(a.mw||0):(b.hot-a.hot)||(b.news.length-a.news.length)||(b.mw||0)-(a.mw||0));
   $('listcount').textContent=vis.length+' site'+(vis.length===1?'':'s')+(state.county?' in '+cname[state.county]+' County':'');
-  $('list').innerHTML=vis.slice(0,400).map(s=>`<div class="row${s.id===selId?' sel':''}" data-id="${s.id}" tabindex="0"><span class="dot${s.hot?' hot':''}" style="background:${COL[s.status]}"></span><div><div class="n">${esc(s.name)}</div><div class="m">${esc(s.operator||'')}${s.operator?' · ':''}${esc(s.city||'')}, ${esc(s.county)}</div></div><span class="mw">${s.mw?fmtMW(s.mw):''}</span></div>`).join('')+(vis.length>400?`<div class="row"><span></span><div class="m">${vis.length-400} more — narrow the search</div></div>`:'');
+  $('list').innerHTML=vis.slice(0,400).map(s=>`<div class="row${s.id===selId?' sel':''}" data-id="${s.id}" tabindex="0"><span class="dot${s.hot?' hot':''}" style="background:${COL[s.status]}"></span><div><div class="n">${esc(s.name)}</div><div class="m">${esc(s.operator||'')}${s.operator?' · ':''}${esc(s.city||'')}, ${esc(s.county)}</div></div><span class="mw">${s.mw?fmtMW(s.mw):''}</span></div>`).join('')+(vis.length>400?`<div class="row"><span></span><div class="m">${vis.length-400} more — narrow the search</div></div>`:'')
+    +(vis.length===0?`<div class="row" style="cursor:default"><span></span><div class="m">No sites match. Active filters: ${[...state.status].map(x=>LBL[x]).join(', ')||'no status selected'}${state.hot?' · contested only':''}${state.r4?' · Region 4 only':''}${state.county?' · '+cname[state.county]+' County':''}${state.q?' · search "'+esc(state.q)+'"':''}${state.colo?'':' · colocation facilities hidden'}.<br><button id="clearall" style="margin-top:8px;border:1px solid var(--rule);border-radius:6px;padding:5px 10px;cursor:pointer;background:var(--paper)">Clear all filters</button></div></div>`:'');
+  const ca=document.getElementById('clearall');if(ca)ca.onclick=()=>{state.status=new Set(['operating','under_construction','proposed']);state.hot=false;state.r4=false;state.q='';q.value='';$('qx').style.display='none';document.querySelectorAll('.chip[data-s]').forEach(c=>c.classList.toggle('off',c.dataset.s==='withdrawn'));document.querySelectorAll('.chip[data-hot],.chip[data-r4]').forEach(c=>c.classList.remove('on'));clearCounty();fit();render();};
 }
 $('list').addEventListener('click',e=>{const r=e.target.closest('.row');if(r&&r.dataset.id)select(r.dataset.id,true);});
 $('list').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r&&r.dataset.id)select(r.dataset.id,true);}});
 $('filters').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
-  if(b.dataset.r4){state.r4=!state.r4;b.classList.toggle('off',!state.r4);}
-  else if(b.dataset.hot){state.hot=!state.hot;b.classList.toggle('off',!state.hot);b.classList.toggle('hot',state.hot);if(!state.hot)b.querySelector('i').style.background='var(--wd)';else b.querySelector('i').style.background='';}
+  if(b.dataset.r4){state.r4=!state.r4;b.classList.toggle('on',state.r4);}
+  else if(b.dataset.hot){state.hot=!state.hot;b.classList.toggle('on',state.hot);}
   else{const s=b.dataset.s;if(state.status.has(s))state.status.delete(s);else state.status.add(s);b.classList.toggle('off',!state.status.has(s));}
   render();});
 $('sort').onchange=render;
