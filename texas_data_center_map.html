@@ -79,7 +79,7 @@ svg#map.drag{cursor:grabbing}
 .region-fill{pointer-events:none;mix-blend-mode:multiply}
 :root[data-theme="dark"] .region-fill{mix-blend-mode:screen}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .region-fill{mix-blend-mode:screen}}
-.pin{cursor:pointer;stroke:var(--paper2);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.pin{cursor:pointer;transition:r .1s;stroke:var(--paper2);stroke-width:1.2;vector-effect:non-scaling-stroke}
 .pin.hot{stroke:var(--hot);stroke-width:2}
 .pin.sel{stroke:var(--ink);stroke-width:2.5}
 .pin.dim{opacity:.15;pointer-events:none}
@@ -287,9 +287,9 @@ function zoomTo(bx,by,bw,bh){const r=svg.getBoundingClientRect();sc=Math.min(r.w
 function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.width/2;cy=cy??r.height/2;const ns=Math.max(.5,Math.min(60,sc*f));tx=cx-(cx-tx)*ns/sc;ty=cy-(cy-ty)*ns/sc;sc=ns;apply();}
 svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(Math.exp(-e.deltaY*.0018),e.clientX-r.left,e.clientY-r.top);},{passive:false});
 let drag=null;
-svg.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,tx,ty,moved:false};svg.setPointerCapture(e.pointerId);});
+svg.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,tx,ty,moved:false,target:e.target};svg.setPointerCapture(e.pointerId);});
 svg.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3){drag.moved=true;svg.classList.add('drag');}tx=drag.tx+dx;ty=drag.ty+dy;apply();});
-svg.addEventListener('pointerup',e=>{svg.classList.remove('drag');if(drag&&!drag.moved){const t=e.target;if(t.classList.contains('pin'))select(t.dataset.id,false);else if(t.classList.contains('county'))focusCounty(t.dataset.fips);}drag=null;});
+svg.addEventListener('pointerup',e=>{svg.classList.remove('drag');if(drag&&!drag.moved){const t=drag.target;if(t.classList.contains('pin'))select(t.dataset.id,false);else if(t.classList.contains('county'))focusCounty(t.dataset.fips);}drag=null;});
 $('zin').onclick=()=>zoomAt(1.6);$('zout').onclick=()=>zoomAt(1/1.6);$('zfit').onclick=()=>{fit();clearCounty();};
 window.addEventListener('resize',fit);
 
