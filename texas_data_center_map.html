@@ -52,10 +52,11 @@ aside{border-right:1px solid var(--rule);background:var(--paper2);display:flex;f
 .chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
 .chip.off{opacity:.55}
 .chip.on{background:var(--cream);border-color:var(--maroon)}
-.chip[data-hot] i,.chip[data-r4] i{box-shadow:0 0 0 1.5px var(--hot);background:transparent}
+.chip[data-hot] i,.chip[data-rg] i{box-shadow:0 0 0 1.5px var(--hot);background:transparent}
 .chip[data-hot].on i{background:var(--hot)}
-.chip[data-r4] i{box-shadow:0 0 0 1.5px var(--olive)}
-.chip[data-r4].on i{background:var(--olive)}
+.chip[data-rg] i{box-shadow:0 0 0 1.5px var(--rgc)}
+.chip[data-rg].on i{background:var(--rgc)}
+.chip[data-rg]{font-size:11px;padding:3px 8px 3px 7px}
 .chip.hot i{background:var(--hot);box-shadow:0 0 0 2px var(--paper),0 0 0 3px var(--hot)}
 .layers{padding:0 14px 8px;display:flex;gap:12px;font-size:12px;color:var(--ink2)}
 .layers label{display:flex;align-items:center;gap:5px;cursor:pointer}
@@ -79,6 +80,7 @@ svg#map.drag{cursor:grabbing}
 .region-fill{pointer-events:none;mix-blend-mode:multiply}
 :root[data-theme="dark"] .region-fill{mix-blend-mode:screen}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .region-fill{mix-blend-mode:screen}}
+
 .pin{cursor:pointer;transition:r .1s;stroke:var(--paper2);stroke-width:1.2;vector-effect:non-scaling-stroke}
 .pin.hot{stroke:var(--hot);stroke-width:2}
 .pin.sel{stroke:var(--ink);stroke-width:2.5}
@@ -132,7 +134,15 @@ svg#map.drag{cursor:grabbing}
 .lawrow i{flex:none;width:9px;height:9px;border-radius:50%;margin-top:5px;background:var(--wd)}
 .lawrow i.yes{background:var(--hot)}
 .precision{font-size:11px;color:var(--ink3);margin-top:6px}
-@media (max-width:800px){.app{grid-template-columns:1fr;grid-template-rows:56px 1fr}aside{display:none}.drawer{width:100%}.stats{display:none}}
+#menubtn{display:none;border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:600;font-size:13px}
+@media (max-width:800px){
+  .app{grid-template-columns:1fr;grid-template-rows:56px 1fr}
+  #menubtn{display:inline-flex}
+  aside{position:absolute;left:0;top:56px;bottom:0;width:min(320px,88vw);z-index:28;box-shadow:var(--shadow);transform:translateX(-102%);transition:transform .22s}
+  aside.open{transform:none}
+  .drawer{width:100%}.stats{display:none}.upd{display:none}
+}
+@media (prefers-reduced-motion:reduce){aside{transition:none}}
 button:focus-visible,input:focus-visible,.row:focus-visible{outline:2px solid var(--olive);outline-offset:1px}
 @media (prefers-reduced-motion:reduce){.drawer,.county{transition:none}}
 </style>
@@ -141,6 +151,7 @@ button:focus-visible,input:focus-visible,.row:focus-visible{outline:2px solid va
 
 <div class="app">
 <header>
+  <button id="menubtn" aria-label="Show search and list">☰ Search</button>
   <h1>Texas <span>Data Center</span> Watch</h1>
   <div class="upd">updated <span id="upd"></span></div>
   <div class="stats">
@@ -165,8 +176,8 @@ button:focus-visible,input:focus-visible,.row:focus-visible{outline:2px solid va
     <button class="chip" data-s="proposed"><i style="background:var(--pr)"></i>Proposed</button>
     <button class="chip off" data-s="withdrawn"><i style="background:var(--wd)"></i>Withdrawn</button>
     <button class="chip" data-hot="1"><i></i>Contested only</button>
-    <button class="chip" data-r4="1"><i></i>Region 4 only</button>
   </div>
+  <div class="filters" id="rfilters" style="padding-top:0" aria-label="Filter by G4T region"></div>
   <div class="layers">
     <label><input type="checkbox" id="lyr-regions" checked> G4T regions</label>
     <label><input type="checkbox" id="lyr-counties" checked> County names</label>
@@ -304,13 +315,22 @@ svg.addEventListener('pointerleave',()=>tip.style.display='none');
 
 // ---------- filters / list ----------
 const byId={};SITES.forEach(s=>byId[s.id]=s);
-const state={status:new Set(['operating','under_construction','proposed']),hot:false,r4:false,colo:false,county:null,q:''};
+const state={status:new Set(['operating','under_construction','proposed']),hot:false,regions:new Set(),colo:false,county:null,q:''};
+const RSHORT={2:'DAL/NE',3:'HOU/East',4:'FW/Panh',5:'EP/RGV',6:'SA/Corpus',7:'AUS/CenTex'};
+const rf=document.getElementById('rfilters');
+REGIONS.slice().sort((a,b)=>a.id-b.id).forEach(r=>{
+  const b=document.createElement('button');b.className='chip';b.dataset.rg=r.id;b.title=r.name+(r.id===7?' (Region 4)':'');
+  b.style.setProperty('--rgc',r.color);b.innerHTML='<i></i>'+(RSHORT[r.id]||r.name);rf.appendChild(b);
+});
+rf.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;const id=+b.dataset.rg;
+  if(state.regions.has(id))state.regions.delete(id);else state.regions.add(id);
+  b.classList.toggle('on',state.regions.has(id));render();});
 function visible(s){
   if(!state.status.has(s.status))return false;
   if(state.hot&&!s.hot)return false;
   if(!state.colo&&s.kind==='facility')return false;
   if(state.county&&s.fips!==state.county)return false;
-  if(state.r4&&!R4.has(s.fips))return false;
+  if(state.regions.size&&!(fipsRegion[s.fips]&&state.regions.has(fipsRegion[s.fips].id)))return false;
   if(state.q&&!s.q.includes(state.q))return false;
   return true;
 }
@@ -321,14 +341,13 @@ function render(){
   vis.sort((a,b)=>sort==='mw'?(b.mw||0)-(a.mw||0):sort==='name'?a.name.localeCompare(b.name):sort==='county'?a.county.localeCompare(b.county)||(b.mw||0)-(a.mw||0):(b.hot-a.hot)||(b.news.length-a.news.length)||(b.mw||0)-(a.mw||0));
   $('listcount').textContent=vis.length+' site'+(vis.length===1?'':'s')+(state.county?' in '+cname[state.county]+' County':'');
   $('list').innerHTML=vis.slice(0,400).map(s=>`<div class="row${s.id===selId?' sel':''}" data-id="${s.id}" tabindex="0"><span class="dot${s.hot?' hot':''}" style="background:${COL[s.status]}"></span><div><div class="n">${esc(s.name)}</div><div class="m">${esc(s.operator||'')}${s.operator?' · ':''}${esc(s.city||'')}, ${esc(s.county)}</div></div><span class="mw">${s.mw?fmtMW(s.mw):''}</span></div>`).join('')+(vis.length>400?`<div class="row"><span></span><div class="m">${vis.length-400} more — narrow the search</div></div>`:'')
-    +(vis.length===0?`<div class="row" style="cursor:default"><span></span><div class="m">No sites match. Active filters: ${[...state.status].map(x=>LBL[x]).join(', ')||'no status selected'}${state.hot?' · contested only':''}${state.r4?' · Region 4 only':''}${state.county?' · '+cname[state.county]+' County':''}${state.q?' · search "'+esc(state.q)+'"':''}${state.colo?'':' · colocation facilities hidden'}.<br><button id="clearall" style="margin-top:8px;border:1px solid var(--rule);border-radius:6px;padding:5px 10px;cursor:pointer;background:var(--paper)">Clear all filters</button></div></div>`:'');
-  const ca=document.getElementById('clearall');if(ca)ca.onclick=()=>{state.status=new Set(['operating','under_construction','proposed']);state.hot=false;state.r4=false;state.q='';q.value='';$('qx').style.display='none';document.querySelectorAll('.chip[data-s]').forEach(c=>c.classList.toggle('off',c.dataset.s==='withdrawn'));document.querySelectorAll('.chip[data-hot],.chip[data-r4]').forEach(c=>c.classList.remove('on'));clearCounty();fit();render();};
+    +(vis.length===0?`<div class="row" style="cursor:default"><span></span><div class="m">No sites match. Active filters: ${[...state.status].map(x=>LBL[x]).join(', ')||'no status selected'}${state.hot?' · contested only':''}${state.regions.size?' · regions: '+[...state.regions].map(i=>RSHORT[i]).join('/'):''}${state.county?' · '+cname[state.county]+' County':''}${state.q?' · search "'+esc(state.q)+'"':''}${state.colo?'':' · colocation facilities hidden'}.<br><button id="clearall" style="margin-top:8px;border:1px solid var(--rule);border-radius:6px;padding:5px 10px;cursor:pointer;background:var(--paper)">Clear all filters</button></div></div>`:'');
+  const ca=document.getElementById('clearall');if(ca)ca.onclick=()=>{state.status=new Set(['operating','under_construction','proposed']);state.hot=false;state.regions=new Set();state.q='';q.value='';$('qx').style.display='none';document.querySelectorAll('.chip[data-s]').forEach(c=>c.classList.toggle('off',c.dataset.s==='withdrawn'));document.querySelectorAll('.chip[data-hot],.chip[data-rg]').forEach(c=>c.classList.remove('on'));clearCounty();fit();render();};
 }
-$('list').addEventListener('click',e=>{const r=e.target.closest('.row');if(r&&r.dataset.id)select(r.dataset.id,true);});
+$('list').addEventListener('click',e=>{const r=e.target.closest('.row');if(r&&r.dataset.id){select(r.dataset.id,true);closeAside();}});
 $('list').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r&&r.dataset.id)select(r.dataset.id,true);}});
 $('filters').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
-  if(b.dataset.r4){state.r4=!state.r4;b.classList.toggle('on',state.r4);}
-  else if(b.dataset.hot){state.hot=!state.hot;b.classList.toggle('on',state.hot);}
+  if(b.dataset.hot){state.hot=!state.hot;b.classList.toggle('on',state.hot);}
   else{const s=b.dataset.s;if(state.status.has(s))state.status.delete(s);else state.status.add(s);b.classList.toggle('off',!state.status.has(s));}
   render();});
 $('sort').onchange=render;
@@ -407,6 +426,9 @@ $('swbtn').onclick=()=>{selId=null;const st=NEWS.statewide||[];
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtMW(m){return m>=1000?(m/1000).toFixed(m%1000?1:0)+' GW':m+' MW';}
 $('upd').textContent=NEWS.generated||'';
+const aside=document.querySelector('aside'),mb=$('menubtn');
+mb.onclick=()=>aside.classList.toggle('open');
+function closeAside(){if(window.innerWidth<=800)aside.classList.remove('open');}
 const proj=SITES.filter(s=>s.kind!=='facility');
 $('s-total').textContent=SITES.length;$('s-op').textContent=SITES.filter(s=>s.status==='operating').length;$('s-uc').textContent=SITES.filter(s=>s.status==='under_construction').length;$('s-pr').textContent=SITES.filter(s=>s.status==='proposed').length;$('s-hot').textContent=SITES.filter(s=>s.hot).length;
 $('s-gw').textContent=(proj.filter(s=>s.status!=='withdrawn').reduce((a,s)=>a+(s.mw||0),0)/1000).toFixed(0);
