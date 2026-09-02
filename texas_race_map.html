@@ -102,7 +102,7 @@
       <div class="loading" id="loading">Loading Texas county map…</div>
       <div class="ctl"><button id="zin">+</button><button id="zout">−</button><button id="zreset" title="Reset view" style="font-size:14px">⤾</button></div>
       <div class="toggles">
-        <label><input type="checkbox" id="tCities" checked> Cities</label>
+        <label><input type="checkbox" id="tCities" checked> Largest city per county</label>
         <label><input type="checkbox" id="tLabels"> County labels</label>
       </div>
       <div class="tooltip" id="tip"></div>
@@ -138,13 +138,95 @@ const ORDER=[
 const COLORS={h:'#1f78b4',w:'#6a3d9a',b:'#e6550d',a:'#238b45',o:'#7a7a7a'};
 
 const CITIES=[
-  {n:'Houston',lon:-95.3698,lat:29.7604,big:1},{n:'San Antonio',lon:-98.4936,lat:29.4241,big:1},
-  {n:'Dallas',lon:-96.7970,lat:32.7767,big:1},{n:'Fort Worth',lon:-97.3308,lat:32.7555,big:1},
-  {n:'Austin',lon:-97.7431,lat:30.2672,big:1},{n:'El Paso',lon:-106.4850,lat:31.7619,big:1},
-  {n:'Corpus Christi',lon:-97.3964,lat:27.8006,big:0},{n:'Lubbock',lon:-101.8552,lat:33.5779,big:0},
-  {n:'Amarillo',lon:-101.8313,lat:35.2220,big:0},{n:'Laredo',lon:-99.5075,lat:27.5306,big:0},
-  {n:'Brownsville',lon:-97.4975,lat:25.9017,big:0},{n:'Midland',lon:-102.0779,lat:31.9974,big:0}
+  {f:'001',n:"Palestine",lon:-95.6471,lat:31.7544,t:3},{f:'003',n:"Andrews",lon:-102.552,lat:32.3208,t:3},{f:'005',n:"Lufkin",lon:-94.7277,lat:31.3217,t:2},
+  {f:'007',n:"Rockport",lon:-97.0722,lat:28.029,t:3},{f:'009',n:"Archer City",lon:-98.6257,lat:33.5937,t:3},{f:'011',n:"Claude",lon:-101.3628,lat:35.1075,t:3},
+  {f:'013',n:"Pleasanton",lon:-98.4957,lat:28.9643,t:3},{f:'015',n:"Sealy",lon:-96.1679,lat:29.7676,t:3},{f:'017',n:"Muleshoe",lon:-102.7284,lat:34.2292,t:3},
+  {f:'019',n:"Lakehills",lon:-98.9448,lat:29.6237,t:3},{f:'021',n:"Bastrop",lon:-97.3257,lat:30.1118,t:3},{f:'023',n:"Seymour",lon:-99.258,lat:33.5955,t:3},
+  {f:'025',n:"Beeville",lon:-97.7494,lat:28.4059,t:3},{f:'027',n:"Killeen",lon:-97.7296,lat:31.0754,t:2},{f:'029',n:"San Antonio",lon:-98.5253,lat:29.4658,t:1},
+  {f:'031',n:"Johnson City",lon:-98.4063,lat:30.2742,t:3},{f:'033',n:"Gail",lon:-101.4465,lat:32.767,t:3},{f:'035',n:"Clifton",lon:-97.5824,lat:31.7822,t:3},
+  {f:'037',n:"Texarkana",lon:-94.0815,lat:33.4487,t:2},{f:'039',n:"Pearland",lon:-95.3215,lat:29.5585,t:2},{f:'041',n:"College Station",lon:-96.296,lat:30.5852,t:2},
+  {f:'043',n:"Alpine",lon:-103.665,lat:30.364,t:3},{f:'045',n:"Silverton",lon:-101.3041,lat:34.4714,t:3},{f:'047',n:"Falfurrias",lon:-98.1451,lat:27.2243,t:3},
+  {f:'049',n:"Brownwood",lon:-98.9767,lat:31.7127,t:2},{f:'051',n:"Caldwell",lon:-96.7007,lat:30.5307,t:3},{f:'053',n:"Marble Falls",lon:-98.2768,lat:30.5649,t:3},
+  {f:'055',n:"Lockhart",lon:-97.6831,lat:29.8785,t:3},{f:'057',n:"Port Lavaca",lon:-96.6278,lat:28.6181,t:3},{f:'059',n:"Clyde",lon:-99.5039,lat:32.4056,t:3},
+  {f:'061',n:"Brownsville",lon:-97.4565,lat:25.998,t:1},{f:'063',n:"Pittsburg",lon:-94.9668,lat:32.9997,t:3},{f:'065',n:"Panhandle",lon:-101.3804,lat:35.346,t:3},
+  {f:'067',n:"Atlanta",lon:-94.1672,lat:33.1136,t:3},{f:'069',n:"Dimmitt",lon:-102.3111,lat:34.5324,t:3},{f:'071',n:"Mont Belvieu",lon:-94.8784,lat:29.8524,t:3},
+  {f:'073',n:"Jacksonville",lon:-95.2617,lat:31.9642,t:3},{f:'075',n:"Childress",lon:-100.2516,lat:34.4293,t:3},{f:'077',n:"Henrietta",lon:-98.1925,lat:33.8147,t:3},
+  {f:'079',n:"Morton",lon:-102.7593,lat:33.7248,t:3},{f:'081',n:"Robert Lee",lon:-100.4856,lat:31.8954,t:3},{f:'083',n:"Coleman",lon:-99.4223,lat:31.8317,t:3},
+  {f:'085',n:"Plano",lon:-96.7487,lat:33.0502,t:2},{f:'087',n:"Wellington",lon:-100.2141,lat:34.8538,t:3},{f:'089',n:"Columbus",lon:-96.5563,lat:29.7055,t:3},
+  {f:'091',n:"New Braunfels",lon:-98.1148,lat:29.6994,t:2},{f:'093',n:"Comanche",lon:-98.6044,lat:31.9005,t:3},{f:'095',n:"Eden",lon:-99.844,lat:31.2162,t:3},
+  {f:'097',n:"Gainesville",lon:-97.1488,lat:33.6391,t:3},{f:'099',n:"Copperas Cove",lon:-97.914,lat:31.1192,t:2},{f:'101',n:"Paducah",lon:-100.3038,lat:34.0144,t:3},
+  {f:'103',n:"Crane",lon:-102.3503,lat:31.3919,t:3},{f:'105',n:"Ozona",lon:-101.2059,lat:30.7074,t:3},{f:'107',n:"Ralls",lon:-101.3845,lat:33.6788,t:3},
+  {f:'109',n:"Van Horn",lon:-104.834,lat:31.0407,t:3},{f:'111',n:"Dalhart",lon:-102.5123,lat:36.0579,t:3},{f:'113',n:"Dallas",lon:-96.7662,lat:32.7936,t:1},
+  {f:'115',n:"Lamesa",lon:-101.9542,lat:32.7333,t:3},{f:'117',n:"Hereford",lon:-102.4001,lat:34.8232,t:3},{f:'119',n:"Cooper",lon:-95.6912,lat:33.3716,t:3},
+  {f:'121',n:"Denton",lon:-97.1419,lat:33.2176,t:2},{f:'123',n:"Cuero",lon:-97.2871,lat:29.1024,t:3},{f:'125',n:"Spur",lon:-100.8556,lat:33.4701,t:3},
+  {f:'127',n:"Carrizo Springs",lon:-99.8589,lat:28.5266,t:3},{f:'129',n:"Clarendon",lon:-100.8918,lat:34.9366,t:3},{f:'131',n:"San Diego",lon:-98.2389,lat:27.7609,t:3},
+  {f:'133',n:"Eastland",lon:-98.8176,lat:32.4024,t:3},{f:'135',n:"Odessa",lon:-102.3406,lat:31.8831,t:2},{f:'137',n:"Rocksprings",lon:-100.2128,lat:30.0172,t:3},
+  {f:'139',n:"Waxahachie",lon:-96.8444,lat:32.4032,t:2},{f:'141',n:"El Paso",lon:-106.4309,lat:31.8479,t:1},{f:'143',n:"Stephenville",lon:-98.2205,lat:32.2148,t:2},
+  {f:'145',n:"Marlin",lon:-96.8934,lat:31.3085,t:3},{f:'147',n:"Bonham",lon:-96.1901,lat:33.588,t:3},{f:'149',n:"La Grange",lon:-96.8767,lat:29.9129,t:3},
+  {f:'151',n:"Rotan",lon:-100.4655,lat:32.854,t:3},{f:'153',n:"Floydada",lon:-101.3367,lat:33.9835,t:3},{f:'155',n:"Crowell",lon:-99.7241,lat:33.9839,t:3},
+  {f:'157',n:"Sugar Land",lon:-95.6357,lat:29.5935,t:2},{f:'159',n:"Mount Vernon",lon:-95.2253,lat:33.176,t:3},{f:'161',n:"Teague",lon:-96.2801,lat:31.6295,t:3},
+  {f:'163',n:"Pearsall",lon:-99.0988,lat:28.8885,t:3},{f:'165',n:"Seminole",lon:-102.6503,lat:32.7208,t:3},{f:'167',n:"League City",lon:-95.1087,lat:29.4873,t:2},
+  {f:'169',n:"Post",lon:-101.3814,lat:33.1911,t:3},{f:'171',n:"Fredericksburg",lon:-98.8749,lat:30.2661,t:3},{f:'173',n:"Garden City",lon:-101.4864,lat:31.8674,t:3},
+  {f:'175',n:"Goliad",lon:-97.3916,lat:28.6708,t:3},{f:'177',n:"Gonzales",lon:-97.4472,lat:29.5126,t:3},{f:'179',n:"Pampa",lon:-100.9651,lat:35.5479,t:3},
+  {f:'181',n:"Sherman",lon:-96.6218,lat:33.6274,t:2},{f:'183',n:"Longview",lon:-94.7621,lat:32.5193,t:2},{f:'185',n:"Navasota",lon:-96.0895,lat:30.3874,t:3},
+  {f:'187',n:"Schertz",lon:-98.2537,lat:29.5649,t:2},{f:'189',n:"Plainview",lon:-101.7234,lat:34.1911,t:2},{f:'191',n:"Memphis",lon:-100.5417,lat:34.7268,t:3},
+  {f:'193',n:"Hamilton",lon:-98.1208,lat:31.6997,t:3},{f:'195',n:"Spearman",lon:-101.1944,lat:36.1983,t:3},{f:'197',n:"Quanah",lon:-99.7429,lat:34.2954,t:3},
+  {f:'199',n:"Lumberton",lon:-94.2071,lat:30.2562,t:3},{f:'201',n:"Houston",lon:-95.3889,lat:29.7863,t:1},{f:'203',n:"Marshall",lon:-94.3515,lat:32.537,t:2},
+  {f:'205',n:"Hartley",lon:-102.3934,lat:35.8914,t:3},{f:'207',n:"Haskell",lon:-99.732,lat:33.1597,t:3},{f:'209',n:"San Marcos",lon:-97.9381,lat:29.8736,t:2},
+  {f:'211',n:"Canadian",lon:-100.3838,lat:35.9096,t:3},{f:'213',n:"Athens",lon:-95.8321,lat:32.2041,t:3},{f:'215',n:"McAllen",lon:-98.2471,lat:26.2273,t:1},
+  {f:'217',n:"Hillsboro",lon:-97.1151,lat:32.0091,t:3},{f:'219',n:"Levelland",lon:-102.3636,lat:33.5806,t:3},{f:'221',n:"Granbury",lon:-97.7685,lat:32.4484,t:2},
+  {f:'223',n:"Sulphur Springs",lon:-95.6124,lat:33.1421,t:3},{f:'225',n:"Crockett",lon:-95.4564,lat:31.3177,t:3},{f:'227',n:"Big Spring",lon:-101.4802,lat:32.2387,t:2},
+  {f:'229',n:"Fort Hancock",lon:-105.8446,lat:31.2837,t:3},{f:'231',n:"Greenville",lon:-96.1098,lat:33.1116,t:2},{f:'233',n:"Borger",lon:-101.4012,lat:35.6598,t:3},
+  {f:'235',n:"Mertzon",lon:-100.8208,lat:31.2619,t:3},{f:'237',n:"Jacksboro",lon:-98.1594,lat:33.2256,t:3},{f:'239',n:"Edna",lon:-96.6483,lat:28.9757,t:3},
+  {f:'241',n:"Jasper",lon:-93.9947,lat:30.9221,t:3},{f:'243',n:"Fort Davis",lon:-103.8922,lat:30.5784,t:3},{f:'245',n:"Beaumont",lon:-94.1451,lat:30.0849,t:2},
+  {f:'247',n:"Hebbronville",lon:-98.686,lat:27.3239,t:3},{f:'249',n:"Alice",lon:-98.0653,lat:27.7556,t:2},{f:'251',n:"Burleson",lon:-97.3343,lat:32.517,t:2},
+  {f:'253',n:"Stamford",lon:-99.6716,lat:33.0156,t:3},{f:'255',n:"Kenedy",lon:-97.8518,lat:28.8176,t:3},{f:'257',n:"Forney",lon:-96.4529,lat:32.744,t:2},
+  {f:'259',n:"Boerne",lon:-98.7289,lat:29.7844,t:3},{f:'261',n:"Sarita",lon:-97.7951,lat:27.2235,t:3},{f:'263',n:"Jayton",lon:-100.5748,lat:33.2502,t:3},
+  {f:'265',n:"Kerrville",lon:-99.132,lat:30.0398,t:2},{f:'267',n:"Junction",lon:-99.7725,lat:30.4906,t:3},{f:'269',n:"Guthrie",lon:-100.329,lat:33.6216,t:3},
+  {f:'271',n:"Brackettville",lon:-100.4109,lat:29.3181,t:3},{f:'273',n:"Kingsville",lon:-97.8611,lat:27.5094,t:2},{f:'275',n:"Munday",lon:-99.624,lat:33.4471,t:3},
+  {f:'277',n:"Paris",lon:-95.546,lat:33.6688,t:2},{f:'279',n:"Littlefield",lon:-102.3349,lat:33.9191,t:3},{f:'281',n:"Lampasas",lon:-98.1824,lat:31.064,t:3},
+  {f:'283',n:"Cotulla",lon:-99.2367,lat:28.4364,t:3},{f:'285',n:"Hallettsville",lon:-96.9436,lat:29.4429,t:3},{f:'287',n:"Giddings",lon:-96.9279,lat:30.1833,t:3},
+  {f:'289',n:"Buffalo",lon:-96.066,lat:31.46,t:3},{f:'291',n:"Liberty",lon:-94.788,lat:30.0379,t:3},{f:'293',n:"Mexia",lon:-96.4833,lat:31.6809,t:3},
+  {f:'295',n:"Booker",lon:-100.5402,lat:36.4561,t:3},{f:'297',n:"George West",lon:-98.1183,lat:28.33,t:3},{f:'299',n:"Kingsland",lon:-98.4545,lat:30.6651,t:3},
+  {f:'301',n:"Mentone",lon:-103.5989,lat:31.7073,t:3},{f:'303',n:"Lubbock",lon:-101.8878,lat:33.5659,t:1},{f:'305',n:"Tahoka",lon:-101.7951,lat:33.164,t:3},
+  {f:'307',n:"Brady",lon:-99.3697,lat:31.1322,t:3},{f:'309',n:"Waco",lon:-97.1881,lat:31.5598,t:2},{f:'311',n:"Tilden",lon:-98.5488,lat:28.4598,t:3},
+  {f:'313',n:"Madisonville",lon:-95.9091,lat:30.9538,t:3},{f:'315',n:"Jefferson",lon:-94.3512,lat:32.7634,t:3},{f:'317',n:"Stanton",lon:-101.7925,lat:32.1316,t:3},
+  {f:'319',n:"Mason",lon:-99.2288,lat:30.748,t:3},{f:'321',n:"Bay City",lon:-95.9601,lat:28.9838,t:3},{f:'323',n:"Eagle Pass",lon:-100.484,lat:28.7125,t:2},
+  {f:'325',n:"Hondo",lon:-99.162,lat:29.3531,t:3},{f:'327',n:"Menard",lon:-99.7837,lat:30.9185,t:3},{f:'329',n:"Midland",lon:-102.1137,lat:32.0249,t:1},
+  {f:'331',n:"Rockdale",lon:-97.0089,lat:30.6542,t:3},{f:'333',n:"Goldthwaite",lon:-98.5736,lat:31.4513,t:3},{f:'335',n:"Colorado City",lon:-100.8582,lat:32.3994,t:3},
+  {f:'337',n:"Bowie",lon:-97.844,lat:33.5566,t:3},{f:'339',n:"The Woodlands",lon:-95.5134,lat:30.1738,t:2},{f:'341',n:"Dumas",lon:-101.9642,lat:35.8613,t:3},
+  {f:'343',n:"Daingerfield",lon:-94.725,lat:33.0306,t:3},{f:'345',n:"Matador",lon:-100.8211,lat:34.015,t:3},{f:'347',n:"Nacogdoches",lon:-94.6528,lat:31.6134,t:2},
+  {f:'349',n:"Corsicana",lon:-96.4665,lat:32.0824,t:2},{f:'351',n:"Newton",lon:-93.7537,lat:30.8502,t:3},{f:'353',n:"Sweetwater",lon:-100.4092,lat:32.4693,t:3},
+  {f:'355',n:"Corpus Christi",lon:-97.3755,lat:27.726,t:1},{f:'357',n:"Perryton",lon:-100.7976,lat:36.393,t:3},{f:'359',n:"Vega",lon:-102.4262,lat:35.2456,t:3},
+  {f:'361',n:"Orange",lon:-93.7616,lat:30.121,t:3},{f:'363',n:"Mineral Wells",lon:-98.0776,lat:32.8169,t:3},{f:'365',n:"Carthage",lon:-94.3368,lat:32.1526,t:3},
+  {f:'367',n:"Weatherford",lon:-97.7723,lat:32.7536,t:2},{f:'369',n:"Friona",lon:-102.7232,lat:34.6394,t:3},{f:'371',n:"Fort Stockton",lon:-102.8844,lat:30.8926,t:3},
+  {f:'373',n:"Livingston",lon:-94.9381,lat:30.71,t:3},{f:'375',n:"Amarillo",lon:-101.8311,lat:35.1988,t:1},{f:'377',n:"Presidio",lon:-104.3653,lat:29.5603,t:3},
+  {f:'379',n:"Emory",lon:-95.7677,lat:32.8765,t:3},{f:'381',n:"Canyon",lon:-101.9178,lat:34.9877,t:3},{f:'383',n:"Big Lake",lon:-101.4534,lat:31.1941,t:3},
+  {f:'385',n:"Camp Wood",lon:-100.0108,lat:29.669,t:3},{f:'387',n:"Clarksville",lon:-95.0561,lat:33.611,t:3},{f:'389',n:"Pecos",lon:-103.5057,lat:31.4046,t:3},
+  {f:'391',n:"Refugio",lon:-97.275,lat:28.3073,t:3},{f:'393',n:"Miami",lon:-100.6416,lat:35.6923,t:3},{f:'395',n:"Hearne",lon:-96.5956,lat:30.877,t:3},
+  {f:'397',n:"Rockwall",lon:-96.4377,lat:32.9169,t:2},{f:'399',n:"Ballinger",lon:-99.9559,lat:31.7395,t:3},{f:'401',n:"Henderson",lon:-94.796,lat:32.1576,t:3},
+  {f:'403',n:"Milam",lon:-93.7979,lat:31.4541,t:3},{f:'405',n:"San Augustine",lon:-94.1108,lat:31.5297,t:3},{f:'407',n:"Shepherd",lon:-95.0021,lat:30.491,t:3},
+  {f:'409',n:"Portland",lon:-97.3284,lat:27.8911,t:3},{f:'411',n:"San Saba",lon:-98.7244,lat:31.1965,t:3},{f:'413',n:"Eldorado",lon:-100.5979,lat:30.8617,t:3},
+  {f:'415',n:"Snyder",lon:-100.9113,lat:32.7133,t:3},{f:'417',n:"Albany",lon:-99.2956,lat:32.7272,t:3},{f:'419',n:"Center",lon:-94.1796,lat:31.793,t:3},
+  {f:'421',n:"Stratford",lon:-102.076,lat:36.3376,t:3},{f:'423',n:"Tyler",lon:-95.3062,lat:32.3184,t:2},{f:'425',n:"Glen Rose",lon:-97.7441,lat:32.2462,t:3},
+  {f:'427',n:"Rio Grande City",lon:-98.8215,lat:26.3808,t:2},{f:'429',n:"Breckenridge",lon:-98.9125,lat:32.7566,t:3},{f:'431',n:"Sterling City",lon:-100.986,lat:31.8392,t:3},
+  {f:'433',n:"Aspermont",lon:-100.2253,lat:33.1405,t:3},{f:'435',n:"Sonora",lon:-100.642,lat:30.5706,t:3},{f:'437',n:"Tulia",lon:-101.7742,lat:34.5374,t:3},
+  {f:'439',n:"Fort Worth",lon:-97.3473,lat:32.7811,t:1},{f:'441',n:"Abilene",lon:-99.7384,lat:32.4543,t:2},{f:'443',n:"Sanderson",lon:-102.4079,lat:30.1508,t:3},
+  {f:'445',n:"Brownfield",lon:-102.273,lat:33.1757,t:3},{f:'447',n:"Throckmorton",lon:-99.1798,lat:33.182,t:3},{f:'449',n:"Mount Pleasant",lon:-94.9717,lat:33.1613,t:3},
+  {f:'451',n:"San Angelo",lon:-100.4506,lat:31.4424,t:2},{f:'453',n:"Austin",lon:-97.7522,lat:30.3004,t:1},{f:'455',n:"Trinity",lon:-95.3736,lat:30.9445,t:3},
+  {f:'457',n:"Woodville",lon:-94.4236,lat:30.774,t:3},{f:'459',n:"Gilmer",lon:-94.946,lat:32.7317,t:3},{f:'461',n:"McCamey",lon:-102.22,lat:31.1325,t:3},
+  {f:'463',n:"Uvalde",lon:-99.7782,lat:29.2153,t:3},{f:'465',n:"Del Rio",lon:-100.88,lat:29.3708,t:2},{f:'467',n:"Canton",lon:-95.864,lat:32.5543,t:3},
+  {f:'469',n:"Victoria",lon:-96.985,lat:28.8285,t:2},{f:'471',n:"Huntsville",lon:-95.5544,lat:30.705,t:2},{f:'473',n:"Hempstead",lon:-96.0779,lat:30.1004,t:3},
+  {f:'475',n:"Monahans",lon:-103.0403,lat:31.6289,t:3},{f:'477',n:"Brenham",lon:-96.3964,lat:30.1585,t:3},{f:'479',n:"Laredo",lon:-99.4875,lat:27.5629,t:1},
+  {f:'481',n:"El Campo",lon:-96.2724,lat:29.1987,t:3},{f:'483',n:"Shamrock",lon:-100.2461,lat:35.2153,t:3},{f:'485',n:"Wichita Falls",lon:-98.5291,lat:33.9072,t:2},
+  {f:'487',n:"Vernon",lon:-99.3,lat:34.148,t:3},{f:'489',n:"Raymondville",lon:-97.7769,lat:26.4759,t:3},{f:'491',n:"Round Rock",lon:-97.666,lat:30.5254,t:2},
+  {f:'493',n:"Floresville",lon:-98.163,lat:29.14,t:3},{f:'495',n:"Kermit",lon:-103.0924,lat:31.854,t:3},{f:'497',n:"Decatur",lon:-97.5876,lat:33.2262,t:3},
+  {f:'499',n:"Mineola",lon:-95.4775,lat:32.6461,t:3},{f:'501',n:"Denver City",lon:-102.8318,lat:32.968,t:3},{f:'503',n:"Graham",lon:-98.5778,lat:33.1017,t:3},
+  {f:'505',n:"Zapata",lon:-99.2612,lat:26.9027,t:3},{f:'507',n:"Crystal City",lon:-99.8257,lat:28.6909,t:3}
 ];
+const CITY_OF={};CITIES.forEach(c=>CITY_OF[c.f]=c);
+const CITY_R={1:3.6,2:2.7,3:2.0},CITY_FS={1:12,2:11,3:10.5};
+function cityLabelOn(d,k){return d.t===1||(d.t===2&&k>=2.2)||k>=4.2;}
 
 /* ---------- Regions (scheme + anchor counties from Texas Region Builder) ---------- */
 const REGIONS=[
@@ -237,7 +319,8 @@ function showTip(ev,f){
   if(mode==='dom'){const dm=dominant(d);v=`Largest: <b>${ORDER.find(o=>o.k===dm).label}</b> (${pct(d,dm).toFixed(1)}%)`;}
   else v=`${GROUPS[mode].label}: <b>${pct(d,mode).toFixed(1)}%</b>`;
   const rg=regionMode!=='off'?`<br><span style="opacity:.7">▰ ${regionName(f)}</span>`:'';
-  tip.innerHTML=`<b>${d.n}</b><br>${v}<br><span style="opacity:.7">pop. ${fmt(d.t)}</span>${rg}`;
+  const ct=CITY_OF[f]?`<br><span style="opacity:.7">● ${CITY_OF[f].n}</span>`:'';
+  tip.innerHTML=`<b>${d.n}</b><br>${v}<br><span style="opacity:.7">pop. ${fmt(d.t)}</span>${ct}${rg}`;
   const r=document.getElementById('mapwrap').getBoundingClientRect();
   tip.style.left=(ev.clientX-r.left+15)+'px';tip.style.top=(ev.clientY-r.top+14)+'px';tip.style.opacity=1;
 }
@@ -252,7 +335,7 @@ function renderDetail(f){
   const regLine=R?`<div class="tot" style="margin-top:-8px;margin-bottom:13px"><span class="lsw" style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${R.color};vertical-align:-1px;margin-right:5px"></span>${R.name}</div>`:'';
   el.innerHTML=`<h3>County detail</h3>
     <div class="cty">${d.n}<span class="rank">#${rk.t} by population</span></div>
-    <div class="tot">Total population: <b>${fmt(d.t)}</b></div>`+regLine+
+    <div class="tot">Total population: <b>${fmt(d.t)}</b>${CITY_OF[f]?` · Largest city: <b>${CITY_OF[f].n}</b>`:''}</div>`+regLine+
     rows.map(r=>`<div class="bar"><div class="top"><span class="nm"><i style="background:${COLORS[r.k]}"></i>${r.label}</span><span class="vals"><b>${fmt(r.count)}</b> · ${r.pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="width:${(100*r.count/max).toFixed(1)}%;background:${COLORS[r.k]}"></div></div></div>`).join('')+
     `<div class="hint">Bars are scaled to this county's largest group, so the longest bar = the biggest population. Percentages are share of total. Ranks are out of 254 counties.</div>`;
 }
@@ -400,15 +483,17 @@ loadGeometry().then(feats=>{
   drawRegions();
 
   // city markers
+  // largest city in every county (dot always; label appears as you zoom in: major cities at all zooms, mid-size at ~2x, the rest at ~4x)
   const cityG=gCity.selectAll('g.city').data(CITIES).enter().append('g').attr('class','city')
     .attr('transform',d=>{const p=projection([d.lon,d.lat]);return `translate(${p[0]},${p[1]})`;});
-  cityG.append('circle').attr('class','cityDot').attr('r',d=>d.big?3.4:2.4);
-  cityG.append('text').attr('class','cityLbl').attr('x',6).attr('y',4).attr('display',d=>d.big?null:'none').text(d=>d.n);
+  cityG.append('circle').attr('class','cityDot').attr('r',d=>CITY_R[d.t]).attr('fill-opacity',d=>d.t===3?.75:1);
+  cityG.append('text').attr('class','cityLbl').attr('x',7).attr('y',4).attr('display',d=>cityLabelOn(d,1)?null:'none')
+    .style('font-size',d=>CITY_FS[d.t]+'px').text(d=>d.n);
 
   zoom=d3.zoom().scaleExtent([1,12]).on('zoom',e=>{
     gMap.attr('transform',e.transform);const k=e.transform.k;
-    gCity.selectAll('.cityDot').attr('r',d=>(d.big?3.4:2.4)/k);
-    gCity.selectAll('.cityLbl').style('font-size',(12/k)+'px').attr('stroke-width',3/k);
+    gCity.selectAll('.cityDot').attr('r',d=>CITY_R[d.t]/k*Math.min(1.6,Math.sqrt(k))).style('stroke-width',(1.2/k)+'px');
+    gCity.selectAll('.cityLbl').attr('display',d=>cityLabelOn(d,k)?null:'none').style('font-size',d=>(CITY_FS[d.t]/k)+'px').style('stroke-width',(3/k)+'px').attr('x',7/k).attr('y',4/k);
     gCounty.selectAll('.ctyLbl').style('font-size',(11/k)+'px').attr('stroke-width',2.4/k);
     gRegion.selectAll('.rgnOutline').attr('stroke-width',2.6/k);
     gRegion.selectAll('.rgnLbl').attr('transform',d=>`translate(${d.cx},${d.cy}) scale(${1/k})`);
