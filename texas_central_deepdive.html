@@ -177,6 +177,8 @@ const BR_GEN=[30,40,45,50,55,60,65,70,80], BR_PRI=[0,2,4,6,8,11,14,18,25,40];
 const MODES={
   turnout:{label:'Turnout',color:'#0f5fa6',kind:'seq',unit:'%',get breaks(){return EL[elA].pri?BR_PRI:BR_GEN;},val:f=>tp(CT[f].to,elA),get title(){return `${EL[elA].l} turnout — ${EL[elA].pri?'party-primary votes':'ballots'} ÷ registered voters`;}},
   chg:{label:'Change between two elections',color:null,kind:'div',unit:' pts',get breaks(){return EL[elA].pri||EL[elB].pri?[-10,-5,-2,-0.5,0.5,2,5,10]:[-10,-6,-3,-1,1,3,6,10];},val:f=>tp(CT[f].to,elA)-tp(CT[f].to,elB),get title(){return `Turnout change: ${EL[elB].l} → ${EL[elA].l} (percentage points)`;}},
+  pop:{label:'Population',color:'#2a7f62',kind:'seq',unit:'n',breaks:[0,10000,25000,50000,100000,250000,500000,1000000,2000000],val:f=>CT[f].t,title:'Total population (ACS 2020–2024)'},
+  reg:{label:'Registered voters',color:'#2a7f62',kind:'seq',unit:'n',breaks:[0,10000,25000,50000,100000,250000,500000,1000000,2000000],val:f=>CT[f].to[elA][0],get title(){return `Registered voters — ${EL[elA].l}`;}},
   h:{label:'Hispanic / Latino %',color:COLORS.h,kind:'seq',breaks:[0,10,20,30,40,50,70,100],unit:'%',val:f=>pct(CT[f].h,CT[f].t),title:'Hispanic / Latino share of population'},
   w:{label:'White %',color:COLORS.w,kind:'seq',breaks:[0,10,25,40,55,70,85,100],unit:'%',val:f=>pct(CT[f].w,CT[f].t),title:'White (non-Hispanic) share of population'},
   b:{label:'Black %',color:COLORS.b,kind:'seq',breaks:[0,2,5,10,15,20,30,45],unit:'%',val:f=>pct(CT[f].b,CT[f].t),title:'Black share of population'},
@@ -193,7 +195,8 @@ function fillFor(f){
   if(m.kind==='div')return DIV[classIndex(m.breaks,v)];
   return COLORS[v];
 }
-function valText(f){const m=MODES[mode];const v=m.val(f);if(m.kind==='dom')return ORDER.find(o=>o.k===v).label.split(' ')[0];return (m.kind==='div'&&v>0?'+':'')+v.toFixed(1)+(m.unit==='%'?'%':'');}
+const compact=n=>n>=1e6?(n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M':n>=1e3?Math.round(n/1e3)+'k':String(n);
+function valText(f){const m=MODES[mode];const v=m.val(f);if(m.kind==='dom')return ORDER.find(o=>o.k===v).label.split(' ')[0];if(m.unit==='n')return compact(v);return (m.kind==='div'&&v>0?'+':'')+v.toFixed(1)+(m.unit==='%'?'%':'');}
 
 const modesEl=document.getElementById('modes');
 Object.entries(MODES).forEach(([id,m])=>{const b=document.createElement('button');b.dataset.mode=id;
@@ -201,23 +204,25 @@ Object.entries(MODES).forEach(([id,m])=>{const b=document.createElement('button'
   b.innerHTML=`<span class="dot" style="background:${bg}"></span>${m.label}`;b.onclick=()=>setMode(id);modesEl.appendChild(b);});
 function setMode(id){mode=id;document.querySelectorAll('#modes button').forEach(b=>{const on=b.dataset.mode===id;b.classList.toggle('active',on);
   const m=MODES[b.dataset.mode];b.style.background=on?(m.kind==='div'?'#334155':(m.kind==='dom'?'#334155':m.color)):'#fff';});
-  const isT=id==='turnout'||id==='chg';document.getElementById('pick').style.opacity=isT?1:.6;document.getElementById('lblB').style.opacity=id==='chg'?1:.6;document.getElementById('elB').style.opacity=id==='chg'?1:.7;paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}
+  const isT=id==='turnout'||id==='chg'||id==='reg';document.getElementById('pick').style.opacity=isT?1:.6;document.getElementById('lblB').style.opacity=id==='chg'?1:.6;document.getElementById('elB').style.opacity=id==='chg'?1:.7;paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}
 
 /* ---------- election pickers ---------- */
 ['elA','elB'].forEach(id=>{const sel=document.getElementById(id);ELECTIONS.forEach(e=>{const o=document.createElement('option');o.value=e.k;o.textContent=e.l;sel.appendChild(o);});
-  sel.value=id==='elA'?elA:elB;sel.onchange=()=>{if(id==='elA')elA=sel.value;else elB=sel.value;const want=id==='elB'?'chg':(mode==='chg'?'chg':'turnout');if(mode!==want)setMode(want);else{paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}};});
+  sel.value=id==='elA'?elA:elB;sel.onchange=()=>{if(id==='elA')elA=sel.value;else elB=sel.value;const want=id==='elB'?'chg':(mode==='chg'||mode==='reg'?mode:'turnout');if(mode!==want)setMode(want);else{paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}};});
 
 /* ---------- legend ---------- */
 function renderLegend(){
   const m=MODES[mode],el=document.getElementById('legend');let rows='';
   if(m.kind==='dom'){rows=ORDER.slice(0,4).map(o=>`<div class="lrow"><span class="lsw" style="background:${COLORS[o.k]}"></span>${o.label} is largest group</div>`).join('');}
-  else{const r=m.kind==='seq'?rampFor(mode):DIV;for(let i=0;i<m.breaks.length-1;i++)rows+=`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${m.kind==='div'&&m.breaks[i]>0?'+':''}${m.breaks[i]} to ${m.kind==='div'&&m.breaks[i+1]>0?'+':''}${m.breaks[i+1]}${m.unit==='%'?'%':' pts'}</div>`;}
+  else{const r=m.kind==='seq'?rampFor(mode):DIV;for(let i=0;i<m.breaks.length-1;i++)rows+=m.unit==='n'?`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${compact(m.breaks[i])} – ${compact(m.breaks[i+1])}</div>`:`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${m.kind==='div'&&m.breaks[i]>0?'+':''}${m.breaks[i]} to ${m.kind==='div'&&m.breaks[i+1]>0?'+':''}${m.breaks[i+1]}${m.unit==='%'?'%':' pts'}</div>`;}
   el.innerHTML=`<h3>${m.title}</h3>${rows}<div class="legdesc">${legendNote()}</div>`;
 }
 function legendNote(){
   const src='Sources: Texas Legislative Council election data 2018–2024; Texas SoS March 2026 registration &amp; governor-primary votes (2026 proxy).';
   if(mode==='turnout')return `Region: <b>${regT(elA).toFixed(1)}%</b> · Texas: <b>${stateT(elA).toFixed(1)}%</b>. Pick any election above; generals and primaries use different color scales. ${src}`;
   if(mode==='chg'){const r=regT(elA)-regT(elB),t=stateT(elA)-stateT(elB);return `Blue = turnout fell from <b>${EL[elB].l}</b> to <b>${EL[elA].l}</b>; orange = it rose. Region ${r>0?'+':''}${r.toFixed(1)} pts · Texas ${t>0?'+':''}${t.toFixed(1)} pts. Use the two pickers above to compare any pair (e.g. 2018 vs 2022 midterms, or 2024 vs 2026 Dem primaries). ${src}`;}
+  if(mode==='pop'){const L=[...FIPS].sort((a,b)=>CT[b].t-CT[a].t);return `Region total <b>${fmt(DD.region.race.t)}</b> people; Travis + Williamson + Bell + McLennan + Hays + Brazos hold ${(100*L.slice(0,6).reduce((a,f)=>a+CT[f].t,0)/DD.region.race.t).toFixed(0)}% of it. Source: U.S. Census ACS 2020–2024 5-year.`;}
+  if(mode==='reg')return `Region: <b>${fmt(REG_T[elA][0])}</b> registered voters for ${EL[elA].l} (Texas ${fmt(ST_T[elA].vr)}). Change the election with the picker above. Source: Texas Legislative Council / Texas SoS.`;
   return `Source: U.S. Census ACS 2020–2024 5-year (B03002). Region total ${fmt(DD.region.race.t)} people.`;
 }
 
