@@ -21,6 +21,8 @@
   .modes .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
   .modes button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .12s}
   .modes button .dot{width:11px;height:11px;border-radius:3px}
+  .modes select.sel{border:1px solid var(--line);background:#fff;color:var(--ink);padding:6px 10px;border-radius:9px;font-size:13px;cursor:pointer}
+  .modes select.sel:disabled{opacity:.45;cursor:default}
   .modes button:hover{border-color:#b9c0cf;transform:translateY(-1px)}
   .modes button.active{color:#fff;border-color:transparent;font-weight:600;box-shadow:0 2px 6px rgba(20,27,38,.18)}
   main{flex:1;display:flex;min-height:0}
@@ -108,9 +110,13 @@
   <header>
     <div class="htop">
       <h1>Central Texas / Austin — Demographics &amp; Turnout</h1>
-      <span class="sub">30 counties · race &amp; ethnicity · top-3 cities per county · turnout trends 2018 → 2026 · click a county</span>
+      <span class="sub">30 counties · pick any election 2018–2026 or compare two · race &amp; ethnicity · top-3 cities per county · click a county</span>
     </div>
     <div class="modes" id="modes"><span class="lbl">Color by</span></div>
+    <div class="modes" id="pick" style="margin-top:8px">
+      <span class="lbl">Election</span><select id="elA" class="sel"></select>
+      <span class="lbl" id="lblB" style="margin-left:6px">Compare to</span><select id="elB" class="sel"></select>
+    </div>
   </header>
   <main>
     <div id="mapwrap">
@@ -159,12 +165,18 @@ function ramp(color,n=7){const light=mix(color,'#ffffff',0.90),dark=mix(color,'#
 function classIndex(breaks,v){for(let i=0;i<breaks.length-1;i++){if(v>=breaks[i]&&v<breaks[i+1])return i;}return v>=breaks[breaks.length-1]?breaks.length-2:0;}
 
 /* ---------- modes ---------- */
+const ELECTIONS=[
+  {k:'g18',l:'2018 general (midterm)',pri:0},{k:'g20',l:'2020 general (presidential)',pri:0},{k:'g22',l:'2022 general (midterm)',pri:0},{k:'g24',l:'2024 general (presidential)',pri:0},
+  {k:'p18d',l:'2018 Dem primary',pri:1},{k:'p18r',l:'2018 GOP primary',pri:1},{k:'p20d',l:'2020 Dem primary',pri:1},{k:'p20r',l:'2020 GOP primary',pri:1},
+  {k:'p22d',l:'2022 Dem primary',pri:1},{k:'p22r',l:'2022 GOP primary',pri:1},{k:'p24d',l:'2024 Dem primary',pri:1},{k:'p24r',l:'2024 GOP primary',pri:1},
+  {k:'p26d',l:'2026 Dem primary',pri:1},{k:'p26r',l:'2026 GOP primary',pri:1}
+];
+const EL={};ELECTIONS.forEach(e=>EL[e.k]=e);
+let elA='g24', elB='g18';
+const BR_GEN=[30,40,45,50,55,60,65,70,80], BR_PRI=[0,2,4,6,8,11,14,18,25,40];
 const MODES={
-  t24:{label:'Turnout · 2024 general',color:'#0f5fa6',kind:'seq',breaks:[40,50,55,60,65,70,75,85],unit:'%',val:f=>tp(CT[f].to,'g24'),title:'2024 general turnout — ballots ÷ registered voters'},
-  t22:{label:'Turnout · 2022 midterm',color:'#0f5fa6',kind:'seq',breaks:[30,40,45,50,55,60,65,75],unit:'%',val:f=>tp(CT[f].to,'g22'),title:'2022 general (midterm) turnout — ballots ÷ registered voters'},
-  chg:{label:'Change ’18 → ’24',color:null,kind:'div',breaks:[-8,-4,-2,-1,1,2,4,8],unit:' pts',val:f=>tp(CT[f].to,'g24')-tp(CT[f].to,'g18'),title:'Turnout change: 2018 general → 2024 general (percentage points)'},
-  p26d:{label:'2026 Dem primary turnout',color:'#2171b5',kind:'seq',breaks:[0,3,5,8,12,16,20,30],unit:'%',val:f=>tp(CT[f].to,'p26d'),title:'March 2026 Democratic primary — governor-race votes ÷ registered voters'},
-  p26r:{label:'2026 GOP primary turnout',color:'#cb181d',kind:'seq',breaks:[0,5,8,11,14,17,20,30],unit:'%',val:f=>tp(CT[f].to,'p26r'),title:'March 2026 Republican primary — governor-race votes ÷ registered voters'},
+  turnout:{label:'Turnout',color:'#0f5fa6',kind:'seq',unit:'%',get breaks(){return EL[elA].pri?BR_PRI:BR_GEN;},val:f=>tp(CT[f].to,elA),get title(){return `${EL[elA].l} turnout — ${EL[elA].pri?'party-primary votes':'ballots'} ÷ registered voters`;}},
+  chg:{label:'Change between two elections',color:null,kind:'div',unit:' pts',get breaks(){return EL[elA].pri||EL[elB].pri?[-10,-5,-2,-0.5,0.5,2,5,10]:[-10,-6,-3,-1,1,3,6,10];},val:f=>tp(CT[f].to,elA)-tp(CT[f].to,elB),get title(){return `Turnout change: ${EL[elB].l} → ${EL[elA].l} (percentage points)`;}},
   h:{label:'Hispanic / Latino %',color:COLORS.h,kind:'seq',breaks:[0,10,20,30,40,50,70,100],unit:'%',val:f=>pct(CT[f].h,CT[f].t),title:'Hispanic / Latino share of population'},
   w:{label:'White %',color:COLORS.w,kind:'seq',breaks:[0,10,25,40,55,70,85,100],unit:'%',val:f=>pct(CT[f].w,CT[f].t),title:'White (non-Hispanic) share of population'},
   b:{label:'Black %',color:COLORS.b,kind:'seq',breaks:[0,2,5,10,15,20,30,45],unit:'%',val:f=>pct(CT[f].b,CT[f].t),title:'Black share of population'},
@@ -172,12 +184,12 @@ const MODES={
   dom:{label:'Dominant group',color:'linear-gradient(90deg,#1f78b4,#6a3d9a,#e6550d,#238b45)',kind:'dom',val:f=>dominant(CT[f]),title:'Largest racial / ethnic group in each county'}
 };
 function dominant(d){let best='h',bv=-1;for(const k of ['h','w','b','a']){if(d[k]>bv){bv=d[k];best=k;}}return best;}
-let mode='t24';
-const RAMPS={};Object.entries(MODES).forEach(([k,m])=>{if(m.kind==='seq')RAMPS[k]=ramp(m.color);});
+let mode='turnout';
+function rampFor(k){const m=MODES[k];return ramp(m.color,m.breaks.length-1);}
 const DIV=['#0b3d82','#4a86c8','#a9c6e6','#eef0f4','#f2b28a','#d9662d','#8a2a06'];
 function fillFor(f){
   const m=MODES[mode];const v=m.val(f);if(v==null)return '#ddd';
-  if(m.kind==='seq')return RAMPS[mode][classIndex(m.breaks,v)];
+  if(m.kind==='seq')return rampFor(mode)[classIndex(m.breaks,v)];
   if(m.kind==='div')return DIV[classIndex(m.breaks,v)];
   return COLORS[v];
 }
@@ -188,21 +200,24 @@ Object.entries(MODES).forEach(([id,m])=>{const b=document.createElement('button'
   const bg=m.kind==='div'?'linear-gradient(90deg,#0b3d82,#eef0f4,#8a2a06)':m.color;
   b.innerHTML=`<span class="dot" style="background:${bg}"></span>${m.label}`;b.onclick=()=>setMode(id);modesEl.appendChild(b);});
 function setMode(id){mode=id;document.querySelectorAll('#modes button').forEach(b=>{const on=b.dataset.mode===id;b.classList.toggle('active',on);
-  const m=MODES[b.dataset.mode];b.style.background=on?(m.kind==='div'?'#334155':(m.kind==='dom'?'#334155':m.color)):'#fff';});paint();renderLegend();}
+  const m=MODES[b.dataset.mode];b.style.background=on?(m.kind==='div'?'#334155':(m.kind==='dom'?'#334155':m.color)):'#fff';});
+  const isT=id==='turnout'||id==='chg';document.getElementById('pick').style.opacity=isT?1:.45;document.getElementById('elA').disabled=!isT;document.getElementById('elB').disabled=id!=='chg';document.getElementById('lblB').style.opacity=id==='chg'?1:.45;paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}
+
+/* ---------- election pickers ---------- */
+['elA','elB'].forEach(id=>{const sel=document.getElementById(id);ELECTIONS.forEach(e=>{const o=document.createElement('option');o.value=e.k;o.textContent=e.l;sel.appendChild(o);});
+  sel.value=id==='elA'?elA:elB;sel.onchange=()=>{if(id==='elA')elA=sel.value;else elB=sel.value;if(mode!=='turnout'&&mode!=='chg')setMode(id==='elB'?'chg':'turnout');else{paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}};});
 
 /* ---------- legend ---------- */
 function renderLegend(){
   const m=MODES[mode],el=document.getElementById('legend');let rows='';
   if(m.kind==='dom'){rows=ORDER.slice(0,4).map(o=>`<div class="lrow"><span class="lsw" style="background:${COLORS[o.k]}"></span>${o.label} is largest group</div>`).join('');}
-  else{const r=m.kind==='seq'?RAMPS[mode]:DIV;for(let i=0;i<m.breaks.length-1;i++)rows+=`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${m.kind==='div'&&m.breaks[i]>0?'+':''}${m.breaks[i]} to ${m.kind==='div'&&m.breaks[i+1]>0?'+':''}${m.breaks[i+1]}${m.unit==='%'?'%':' pts'}</div>`;}
+  else{const r=m.kind==='seq'?rampFor(mode):DIV;for(let i=0;i<m.breaks.length-1;i++)rows+=`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${m.kind==='div'&&m.breaks[i]>0?'+':''}${m.breaks[i]} to ${m.kind==='div'&&m.breaks[i+1]>0?'+':''}${m.breaks[i+1]}${m.unit==='%'?'%':' pts'}</div>`;}
   el.innerHTML=`<h3>${m.title}</h3>${rows}<div class="legdesc">${legendNote()}</div>`;
 }
 function legendNote(){
-  if(mode==='t24')return `Region: <b>${regT('g24').toFixed(1)}%</b> · Texas: <b>${stateT('g24').toFixed(1)}%</b>. Source: Texas Legislative Council election data (registered voters &amp; ballots cast by county).`;
-  if(mode==='t22')return `Region: <b>${regT('g22').toFixed(1)}%</b> · Texas: <b>${stateT('g22').toFixed(1)}%</b>. Midterm turnout is the best like-for-like comparison for November 2026.`;
-  if(mode==='chg')return `Blue = turnout fell between the 2018 and 2024 generals; orange = it rose. Region: ${(regT('g24')-regT('g18')).toFixed(1)>0?'+':''}${(regT('g24')-regT('g18')).toFixed(1)} pts · Texas: +${(stateT('g24')-stateT('g18')).toFixed(1)} pts.`;
-  if(mode==='p26d')return `Region: <b>${regT('p26d').toFixed(1)}%</b> of registered voters cast a Democratic governor-primary ballot (vs ${regT('p24d').toFixed(1)}% in 2024). Texas: ${stateT('p26d').toFixed(1)}%. Votes in the governor race are used as the ballots-cast proxy.`;
-  if(mode==='p26r')return `Region: <b>${regT('p26r').toFixed(1)}%</b> (vs ${regT('p24r').toFixed(1)}% in 2024). Texas: ${stateT('p26r').toFixed(1)}%.`;
+  const src='Sources: Texas Legislative Council election data 2018–2024; Texas SoS March 2026 registration &amp; governor-primary votes (2026 proxy).';
+  if(mode==='turnout')return `Region: <b>${regT(elA).toFixed(1)}%</b> · Texas: <b>${stateT(elA).toFixed(1)}%</b>. Pick any election above; generals and primaries use different color scales. ${src}`;
+  if(mode==='chg'){const r=regT(elA)-regT(elB),t=stateT(elA)-stateT(elB);return `Blue = turnout fell from <b>${EL[elB].l}</b> to <b>${EL[elA].l}</b>; orange = it rose. Region ${r>0?'+':''}${r.toFixed(1)} pts · Texas ${t>0?'+':''}${t.toFixed(1)} pts. Use the two pickers above to compare any pair (e.g. 2018 vs 2022 midterms, or 2024 vs 2026 Dem primaries). ${src}`;}
   return `Source: U.S. Census ACS 2020–2024 5-year (B03002). Region total ${fmt(DD.region.race.t)} people.`;
 }
 
@@ -214,7 +229,7 @@ function paint(){gCounty.selectAll('path.county').attr('fill',d=>fillFor(d.fips)
 function showTip(ev,f){
   const d=CT[f];const m=MODES[mode];
   const top=d.top[0]?`<br><span style="opacity:.7">● ${d.top.slice(0,3).map(c=>c.n).join(' · ')}</span>`:'';
-  tip.innerHTML=`<b>${d.n}</b><br>${m.label}: <b>${valText(f)}</b><br><span style="opacity:.7">pop. ${fmt(d.t)} · 2024 turnout ${tp(d.to,'g24').toFixed(1)}%</span>${top}`;
+  tip.innerHTML=`<b>${d.n}</b><br>${m.label}: <b>${valText(f)}</b><br><span style="opacity:.7">pop. ${fmt(d.t)} · ${EL[elA].l.split(' (')[0]}: ${tp(d.to,elA).toFixed(1)}%${mode==='chg'?` · ${EL[elB].l.split(' (')[0]}: ${tp(d.to,elB).toFixed(1)}%`:''}</span>${top}`;
   const r=document.getElementById('mapwrap').getBoundingClientRect();
   tip.style.left=(ev.clientX-r.left+15)+'px';tip.style.top=(ev.clientY-r.top+14)+'px';tip.style.opacity=1;
 }
@@ -293,10 +308,10 @@ function wireTable(f){const b=document.getElementById('tblbtn');if(b)b.onclick=(
 function renderCounty(f){
   const d=CT[f],el=document.getElementById('detail');
   const rankPop=[...FIPS].sort((a,b)=>CT[b].t-CT[a].t).indexOf(f)+1;
-  const rankT=[...FIPS].sort((a,b)=>tp(CT[b].to,'g24')-tp(CT[a].to,'g24')).indexOf(f)+1;
+  const rankT=[...FIPS].sort((a,b)=>tp(CT[b].to,elA)-tp(CT[a].to,elA)).indexOf(f)+1;
   el.innerHTML=`<span class="back" id="back">← Region rundown</span>
     <div class="cty">${d.n}</div>
-    <div class="tot">Population <b>${fmt(d.t)}</b> (#${rankPop} of 30) · 2024 turnout <b>${tp(d.to,'g24').toFixed(1)}%</b> (#${rankT} of 30) · ${d.nplaces} places</div>
+    <div class="tot">Population <b>${fmt(d.t)}</b> (#${rankPop} of 30) · ${EL[elA].l.split(' (')[0]} turnout <b>${tp(d.to,elA).toFixed(1)}%</b> (#${rankT} of 30) · ${d.nplaces} places</div>
     <div class="sect"><span>Race &amp; ethnicity</span><span class="note">ACS 2020–24</span></div>${raceBars(d)}
     <div class="sect"><span>Largest cities &amp; towns</span><span class="note">top ${Math.min(3,d.top.length)} by population</span></div>
     ${d.top.slice(0,3).map(cityCard).join('')}
@@ -310,12 +325,12 @@ function renderCounty(f){
 let sortKey='t';
 function renderRegion(){
   const el=document.getElementById('detail');const R=DD.region.race;
-  const cos=[...FIPS].map(f=>({f,...CT[f],t24:tp(CT[f].to,'g24'),chg:tp(CT[f].to,'g24')-tp(CT[f].to,'g18'),d26:tp(CT[f].to,'p26d')}));
+  const cos=[...FIPS].map(f=>({f,...CT[f],t24:tp(CT[f].to,elA),chg:tp(CT[f].to,elA)-tp(CT[f].to,elB),d26:tp(CT[f].to,'p26d')}));
   cos.sort((a,b)=>sortKey==='n'?a.n.localeCompare(b.n):b[sortKey]-a[sortKey]);
   const cmax=Math.max(...cos.map(c=>c[sortKey==='n'?'t':sortKey]));
-  const colLbl={t:'pop.',t24:'2024 turnout',chg:'’18→’24',d26:'’26 Dem primary'};
+  const sh=k=>EL[k].l.replace(' general','').replace(' (midterm)','').replace(' (presidential)','').replace(' primary','');const colLbl={t:'pop.',t24:sh(elA)+' turnout',chg:sh(elB)+'→'+sh(elA),d26:'’26 Dem primary'};
   el.innerHTML=`<div class="cty">Central Texas / Austin region</div>
-    <div class="tot">30 counties · <b>${fmt(R.t)}</b> people · 2024 turnout <b>${regT('g24').toFixed(1)}%</b> · ${fmt(REG_T.g24[0])} registered</div>
+    <div class="tot">30 counties · <b>${fmt(R.t)}</b> people · ${EL[elA].l.split(' (')[0]} turnout <b>${regT(elA).toFixed(1)}%</b> (Texas ${stateT(elA).toFixed(1)}%) · ${fmt(REG_T[elA][0])} registered</div>
     <div class="sect"><span>Region race &amp; ethnicity</span><span class="note">ACS 2020–24</span></div>${raceBars(R)}
     <div class="sect"><span>Largest cities in the region</span><span class="note">top 8</span></div>
     ${[...FIPS].flatMap(f=>CT[f].top.map(c=>({...c,cty:CT[f].n.replace(' County',''),f}))).sort((a,b)=>b.t-a.t).slice(0,8).map((c,i)=>`<div class="ctyrow" data-f="${c.f}"><span class="ci"><b>${i+1}.</b> ${c.n} <span style="color:var(--muted)">· ${c.cty}</span></span><span class="cp">${fmt(c.t)}</span></div>`).join('')}
@@ -325,7 +340,7 @@ function renderRegion(){
     <div class="ctyrows">${cos.map((c,i)=>`<div class="ctyrow" data-f="${c.f}"><span class="ci"><b>${i+1}.</b> ${c.n.replace(' County','')}<i style="width:9px;height:9px;border-radius:2px;display:inline-block;background:${COLORS[dominant(c)]}" title="largest group"></i></span>
         <span class="cp"><span>${fmt(c.t)}</span><b>${c.t24.toFixed(1)}%</b><span style="color:${c.chg>=0?'#8a2a06':'#0b3d82'}">${c.chg>=0?'+':''}${c.chg.toFixed(1)}</span></span>
         <div class="cbar" style="width:${(100*(sortKey==='n'?c.t:c[sortKey])/cmax).toFixed(1)}%;background:${fillFor(c.f)}"></div></div>`).join('')}</div>
-    <div class="hint">Columns: population · 2024 general turnout · change in turnout 2018→2024 (pts). Dot = largest racial/ethnic group. Click a county for its cities and full trend lines.</div>`;
+    <div class="hint">Columns: population · turnout in <b>${EL[elA].l}</b> · change from <b>${EL[elB].l}</b> (pts). Change the elections with the pickers at the top. Dot = largest racial/ethnic group. Click a county for its cities and full trend lines.</div>`;
   el.querySelectorAll('.ctyrow').forEach(row=>row.onclick=()=>{select(row.dataset.f);zoomTo(row.dataset.f);});
   el.querySelectorAll('[data-s]').forEach(a=>a.onclick=e=>{e.preventDefault();sortKey=a.dataset.s;renderRegion();});
   wireTable(null);
@@ -389,7 +404,7 @@ async function loadGeometry(){
   document.getElementById('tCities').onchange=e=>gCity.attr('display',e.target.checked?null:'none');
   document.getElementById('tVals').onchange=e=>gLbl.selectAll('.ctyVal').attr('display',e.target.checked?null:'none');
   document.getElementById('loading').style.display='none';
-  setMode('t24');renderRegion();
+  setMode('turnout');
   document.getElementById('foot').innerHTML=`Region (30 counties): 2018 ${regT('g18').toFixed(1)}% · 2020 ${regT('g20').toFixed(1)}% · 2022 ${regT('g22').toFixed(1)}% · 2024 ${regT('g24').toFixed(1)}% general turnout; 2026 primaries — Dem ${regT('p26d').toFixed(1)}%, GOP ${regT('p26r').toFixed(1)}%. Sources: Texas Legislative Council election data (registered voters &amp; ballots cast by VTD, summed to county; 2018–2024); Texas Secretary of State March 2026 registration &amp; governor-primary results; U.S. Census Bureau ACS 2020–2024 5-year (B03002) via Census Reporter.`;
 })();
 </script>
