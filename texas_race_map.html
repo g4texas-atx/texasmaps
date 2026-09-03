@@ -225,6 +225,8 @@ const CITIES=[
   {f:'505',n:"Zapata",lon:-99.2612,lat:26.9027,t:3},{f:'507',n:"Crystal City",lon:-99.8257,lat:28.6909,t:3}
 ];
 const CITY_OF={};CITIES.forEach(c=>CITY_OF[c.f]=c);
+const TOP3={"021":[{"n":"Elgin","t":11563},{"n":"Bastrop","t":11156},{"n":"Camp Swift","t":8239}],"027":[{"n":"Killeen","t":158159},{"n":"Temple","t":89602},{"n":"Harker Heights","t":34128}],"031":[{"n":"Blanco","t":2175},{"n":"Johnson City","t":1921},{"n":"Round Mountain","t":81}],"035":[{"n":"Clifton","t":3503},{"n":"Meridian","t":1638},{"n":"Laguna Park","t":1596}],"041":[{"n":"College Station","t":124570},{"n":"Bryan","t":87939},{"n":"Lake Bryan","t":2165}],"051":[{"n":"Caldwell","t":4394},{"n":"Somerville","t":1126},{"n":"Beaver Creek","t":958}],"053":[{"n":"Marble Falls","t":7752},{"n":"Burnet","t":6732},{"n":"Granite Shoals","t":5328}],"055":[{"n":"Lockhart","t":15326},{"n":"Luling","t":5531},{"n":"Martindale","t":1072}],"099":[{"n":"Copperas Cove","t":37947},{"n":"Gatesville","t":16228},{"n":"Evant","t":535}],"145":[{"n":"Marlin","t":5516},{"n":"Rosebud","t":1007},{"n":"Golinda","t":836}],"149":[{"n":"La Grange","t":4452},{"n":"Schulenburg","t":2768},{"n":"Flatonia","t":1830}],"161":[{"n":"Teague","t":3476},{"n":"Fairfield","t":2924},{"n":"Wortham","t":1160}],"185":[{"n":"Navasota","t":8542},{"n":"Plantersville","t":579},{"n":"Bedias","t":478}],"193":[{"n":"Hamilton","t":2934},{"n":"Hico","t":1771},{"n":"Carlton","t":10}],"209":[{"n":"San Marcos","t":70897},{"n":"Kyle","t":56823},{"n":"Buda","t":15859}],"217":[{"n":"Hillsboro","t":8506},{"n":"Itasca","t":2073},{"n":"Whitney","t":2050}],"281":[{"n":"Lampasas","t":7671},{"n":"Kempner","t":1215},{"n":"Lometa","t":812}],"287":[{"n":"Giddings","t":5151},{"n":"Lexington","t":1365},{"n":"Dime Box","t":145}],"289":[{"n":"Buffalo","t":1652},{"n":"Jewett","t":1075},{"n":"Centerville","t":1053}],"293":[{"n":"Mexia","t":6859},{"n":"Groesbeck","t":3914},{"n":"Coolidge","t":754}],"299":[{"n":"Kingsland","t":7330},{"n":"Horseshoe Bay","t":4854},{"n":"Llano","t":3494}],"309":[{"n":"Waco","t":143570},{"n":"Hewitt","t":16432},{"n":"Robinson","t":12800}],"313":[{"n":"Madisonville","t":4552},{"n":"Midway","t":257}],"331":[{"n":"Rockdale","t":5523},{"n":"Cameron","t":5416},{"n":"Thorndale","t":1113}],"333":[{"n":"Goldthwaite","t":1843},{"n":"Mullin","t":220},{"n":"Priddy","t":92}],"395":[{"n":"Hearne","t":4555},{"n":"Franklin","t":1530},{"n":"Bremond","t":855}],"411":[{"n":"San Saba","t":3056},{"n":"Richland Springs","t":362}],"453":[{"n":"Austin","t":979539},{"n":"Pflugerville","t":65971},{"n":"Lakeway","t":19307}],"477":[{"n":"Brenham","t":18641},{"n":"Burton","t":174}],"491":[{"n":"Round Rock","t":127786},{"n":"Georgetown","t":85999},{"n":"Cedar Park","t":78301}]}; // largest 3 places per Central TX county (ACS 2020-24), primary county only
+
 const CITY_R={1:3.6,2:2.7,3:2.0},CITY_FS={1:12,2:11,3:10.5};
 function cityLabelOn(d,k){return d.t===1||(d.t===2&&k>=2.2)||k>=4.2;}
 
@@ -326,6 +328,11 @@ function showTip(ev,f){
 }
 
 function select(f){selFips=f;gCounty.selectAll('path.county').classed('sel',d=>d.fips===f);renderDetail(f);}
+function top3Block(f){
+  const L=TOP3[f];if(!L)return '';
+  return `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:4px 0 4px">Largest cities &amp; towns</div>
+    <div class="ctyrows" style="margin-bottom:8px">${L.map((c,i)=>`<div class="ctyrow" style="cursor:default"><span class="ci"><b>${i+1}.</b> ${c.n}</span><span class="cp">${fmt(c.t)}</span><div class="cbar" style="width:${(100*c.t/L[0].t).toFixed(1)}%;background:#94a3b8"></div></div>`).join('')}</div>`;
+}
 function renderDetail(f){
   const d=TXDATA[f],el=document.getElementById('detail');
   const rows=ORDER.map(o=>({...o,count:d[o.k],pc:pct(d,o.k)})).sort((a,b)=>b.count-a.count);
@@ -335,7 +342,7 @@ function renderDetail(f){
   const regLine=R?`<div class="tot" style="margin-top:-8px;margin-bottom:13px"><span class="lsw" style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${R.color};vertical-align:-1px;margin-right:5px"></span>${R.name}</div>`:'';
   el.innerHTML=`<h3>County detail</h3>
     <div class="cty">${d.n}<span class="rank">#${rk.t} by population</span></div>
-    <div class="tot">Total population: <b>${fmt(d.t)}</b>${CITY_OF[f]?` · Largest city: <b>${CITY_OF[f].n}</b>`:''}</div>`+regLine+
+    <div class="tot">Total population: <b>${fmt(d.t)}</b>${CITY_OF[f]?` · Largest city: <b>${CITY_OF[f].n}</b>`:''}</div>`+regLine+top3Block(f)+
     rows.map(r=>`<div class="bar"><div class="top"><span class="nm"><i style="background:${COLORS[r.k]}"></i>${r.label}</span><span class="vals"><b>${fmt(r.count)}</b> · ${r.pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="width:${(100*r.count/max).toFixed(1)}%;background:${COLORS[r.k]}"></div></div></div>`).join('')+
     `<div class="hint">Bars are scaled to this county's largest group, so the longest bar = the biggest population. Percentages are share of total. Ranks are out of 254 counties.</div>`;
 }
@@ -352,6 +359,13 @@ function countiesInRegion(rid){
   return Object.keys(TXDATA).filter(f=>(REGION_OF[f]||REGION_STATIC[f])===rid)
     .map(f=>({f,...TXDATA[f]}));
 }
+function regionCities(rid){
+  if(rid!==1)return '';
+  const L=Object.entries(TOP3).flatMap(([f,arr])=>arr.map(c=>({...c,f,cty:TXDATA[f].n.replace(' County','')}))).sort((a,b)=>b.t-a.t).slice(0,12);
+  return `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:14px 0 4px">Largest cities in the region (top 12)</div>
+    <div class="ctyrows">${L.map((c,i)=>`<div class="ctyrow" data-f="${c.f}"><span class="ci"><b>${i+1}.</b> ${c.n} <span style="color:var(--muted)">· ${c.cty}</span></span><span class="cp">${fmt(c.t)}</span><div class="cbar" style="width:${(100*c.t/L[0].t).toFixed(1)}%;background:#94a3b8"></div></div>`).join('')}</div>
+    <div class="hint">Each county's three largest places (ACS 2020–24); a city that crosses county lines is listed once, under its primary county. Click a city to open its county. Full demographics for these cities are on the <b>Central Texas Deep Dive</b> tab.</div>`;
+}
 function renderRegionDetail(rid){
   const R=REGION_BY_ID[rid];const el=document.getElementById('detail');
   const cos=countiesInRegion(rid).sort((a,b)=>b.t-a.t);
@@ -367,7 +381,7 @@ function renderRegionDetail(rid){
     `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:14px 0 4px">Largest counties${cos.length>12?` (top 12 of ${cos.length})`:''}</div>
      <div class="ctyrows">`+
     top.map((d,i)=>`<div class="ctyrow" data-f="${d.f}"><span class="ci"><b>${i+1}.</b> ${d.n.replace(' County','')}<i style="background:${COLORS[dominant(d)]}" title="largest group"></i></span><span class="cp">${fmt(d.t)}</span><div class="cbar" style="width:${(100*d.t/cmax).toFixed(1)}%;background:${R.color}"></div></div>`).join('')+
-    `</div><div class="hint">Click any county above to see its full breakdown. Colored dot = that county's largest group.</div>`;
+    `</div><div class="hint">Click any county above to see its full breakdown. Colored dot = that county's largest group.</div>`+regionCities(rid);
   el.querySelectorAll('.ctyrow').forEach(row=>row.onclick=()=>{select(row.dataset.f);zoomTo(row.dataset.f);});
 }
 

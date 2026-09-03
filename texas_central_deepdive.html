@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Central Texas — Demographics &amp; Turnout Deep Dive</title>
+<style>
+  :root{
+    --hisp:#1f78b4; --white:#6a3d9a; --black:#e6550d; --asian:#238b45; --other:#7a7a7a;
+    --bg:#eef1f6; --panel:#ffffff; --ink:#161b26; --muted:#697084; --line:#e3e7ee; --accent:#0f5fa6;
+    --cty:#0f5fa6; --reg:#6a3d9a; --tx:#e6550d; --dem:#2171b5; --rep:#cb181d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  #app{display:flex;flex-direction:column;height:100vh}
+  header{padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel);box-shadow:0 1px 3px rgba(20,27,38,.04)}
+  .htop{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .sub{font-size:12px;color:var(--muted)}
+  .modes{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;align-items:center}
+  .modes .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
+  .modes button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .12s}
+  .modes button .dot{width:11px;height:11px;border-radius:3px}
+  .modes button:hover{border-color:#b9c0cf;transform:translateY(-1px)}
+  .modes button.active{color:#fff;border-color:transparent;font-weight:600;box-shadow:0 2px 6px rgba(20,27,38,.18)}
+  main{flex:1;display:flex;min-height:0}
+  #mapwrap{flex:1;position:relative;min-width:0;background:radial-gradient(circle at 50% 30%,#f4f7fb,#e6eaf2)}
+  svg#map{width:100%;height:100%;display:block;cursor:grab}
+  svg#map:active{cursor:grabbing}
+  .county{stroke:#ffffff;stroke-width:.9px;stroke-linejoin:round;cursor:pointer;transition:stroke-width .12s}
+  .county:hover{stroke:#0d1320;stroke-width:1.6px}
+  .county.sel{stroke:#0d1320;stroke-width:2.4px}
+  .ctyLbl{font-size:10.5px;font-weight:600;fill:#1b2233;paint-order:stroke;stroke:#fff;stroke-width:2.6px;stroke-linejoin:round;pointer-events:none;text-anchor:middle}
+  .ctyVal{font-size:9.5px;fill:#3a4257;paint-order:stroke;stroke:#fff;stroke-width:2.4px;pointer-events:none;text-anchor:middle}
+  .cityDot{fill:#11151d;stroke:#fff;stroke-width:1.1px;pointer-events:none}
+  .cityLbl{font-size:10px;font-weight:600;fill:#11151d;paint-order:stroke;stroke:#fff;stroke-width:2.6px;stroke-linejoin:round;pointer-events:none}
+  aside{width:400px;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:18px}
+  .search{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;margin-bottom:13px}
+  h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 9px}
+  .legend{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .lrow{display:flex;align-items:center;gap:9px;font-size:12px;margin:4px 0}
+  .lsw{width:28px;height:14px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.08)}
+  .legdesc{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:7px}
+  .cty{font-size:19px;font-weight:700;margin:2px 0 1px;letter-spacing:-.01em}
+  .tot{font-size:12px;color:var(--muted);margin-bottom:10px}
+  .tot b{color:var(--ink)}
+  .sect{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:16px 0 6px;display:flex;justify-content:space-between;align-items:baseline}
+  .sect .note{text-transform:none;letter-spacing:0;font-size:11px}
+  .bar{margin:7px 0}
+  .bar .top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+  .bar .top .nm{font-weight:600;display:flex;align-items:center;gap:6px}
+  .bar .top .nm i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .bar .top .vals{color:var(--muted)}
+  .bar .top .vals b{color:var(--ink)}
+  .track{height:12px;background:#eef0f4;border-radius:4px;overflow:hidden}
+  .fill{height:100%;border-radius:4px}
+  .stack{display:flex;height:12px;border-radius:4px;overflow:hidden;gap:2px;background:#eef0f4}
+  .stack span{display:block;height:100%}
+  .cityrow{padding:8px 8px;border-radius:8px;border:1px solid var(--line);margin:6px 0;background:#fbfcfe}
+  .cityrow .ch{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:5px}
+  .cityrow .ch b{font-size:13px}
+  .cityrow .ch .cp{color:var(--muted);font-variant-numeric:tabular-nums}
+  .cityrow .pcts{display:flex;gap:9px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:5px}
+  .cityrow .pcts i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:0}
+  .hint{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px}
+  .ctyrow{position:relative;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 7px;border-radius:6px;cursor:pointer;overflow:hidden}
+  .ctyrow:hover{background:#eef2f7}
+  .ctyrow .ci{position:relative;z-index:1;display:flex;align-items:center;gap:6px}
+  .ctyrow .cp{position:relative;z-index:1;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;gap:10px}
+  .ctyrow .cp b{color:var(--ink)}
+  .ctyrow .cbar{position:absolute;left:0;bottom:0;height:3px;opacity:.55;border-radius:2px}
+  .chart{width:100%;height:auto;display:block;margin-top:4px}
+  .chart .grid{stroke:#e6e9ef;stroke-width:1}
+  .chart .ax{font-size:10px;fill:var(--muted)}
+  .chart .ln{fill:none;stroke-width:2px;stroke-linejoin:round;stroke-linecap:round}
+  .chart .pt{stroke:#fff;stroke-width:2px}
+  .chart .dl{font-size:10.5px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:#fff;stroke-width:3px}
+  .chart .dash{stroke-dasharray:3 3}
+  .leg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:4px}
+  .leg i{width:14px;height:3px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:2px}
+  .btnrow{display:flex;gap:6px;margin:6px 0 2px}
+  .btnrow button{border:1px solid var(--line);background:#fff;padding:4px 10px;border-radius:999px;font-size:11.5px;cursor:pointer;color:var(--ink)}
+  .btnrow button.active{background:var(--ink);color:#fff;border-color:transparent}
+  table.tt{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:6px;font-variant-numeric:tabular-nums}
+  table.tt th{text-align:right;font-weight:600;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line)}
+  table.tt th:first-child,table.tt td:first-child{text-align:left}
+  table.tt td{text-align:right;padding:3px 4px;border-bottom:1px solid #f0f2f6}
+  .back{font-size:12px;color:var(--accent);cursor:pointer;margin-bottom:8px;display:inline-block}
+  footer{padding:7px 20px;border-top:1px solid var(--line);background:var(--panel);font-size:11px;color:var(--muted);line-height:1.45}
+  .tooltip{position:absolute;pointer-events:none;background:#11151d;color:#fff;padding:7px 10px;border-radius:7px;font-size:12px;opacity:0;transition:opacity .1s;white-space:nowrap;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tooltip b{font-weight:700}
+  .ctl{position:absolute;left:14px;top:14px;display:flex;flex-direction:column;gap:5px}
+  .ctl button{width:32px;height:32px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:17px;cursor:pointer;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .toggles{position:absolute;right:14px;top:14px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;display:flex;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .toggles label{display:flex;align-items:center;gap:5px;cursor:pointer}
+  .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted)}
+  .err{padding:24px;color:#b00020;font-size:13px;line-height:1.5}
+  @media (max-width:760px){
+    #app{height:auto;min-height:100vh} main{flex-direction:column;min-height:0}
+    #mapwrap{flex:none;height:60vh;min-height:320px}
+    aside{width:100%;border-left:none;border-top:1px solid var(--line);overflow:visible}
+    header{padding:10px 12px} h1{font-size:15px;line-height:1.25} .sub{font-size:11px} .modes{margin-top:8px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="htop">
+      <h1>Central Texas / Austin — Demographics &amp; Turnout</h1>
+      <span class="sub">30 counties · race &amp; ethnicity · top-3 cities per county · turnout trends 2018 → 2026 · click a county</span>
+    </div>
+    <div class="modes" id="modes"><span class="lbl">Color by</span></div>
+  </header>
+  <main>
+    <div id="mapwrap">
+      <svg id="map" viewBox="0 0 980 770" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="loading" id="loading">Loading county map…</div>
+      <div class="ctl"><button id="zin">+</button><button id="zout">−</button><button id="zreset" title="Reset view" style="font-size:14px">⤾</button></div>
+      <div class="toggles">
+        <label><input type="checkbox" id="tCities" checked> Top-3 cities</label>
+        <label><input type="checkbox" id="tVals" checked> Values</label>
+      </div>
+      <div class="tooltip" id="tip"></div>
+    </div>
+    <aside>
+      <input class="search" id="search" list="ctylist" placeholder="🔍  Search a county or city…">
+      <datalist id="ctylist"></datalist>
+      <div class="legend" id="legend"></div>
+      <div id="detail"></div>
+    </aside>
+  </main>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const DD={"counties":{"021":{"n":"Bastrop County","t":106582,"w":47370,"b":6104,"a":825,"h":48002,"o":4281,"top":[{"n":"Elgin","t":11563,"w":3818,"b":1907,"a":39,"h":5420,"o":379,"lat":30.352,"lon":-97.3879},{"n":"Bastrop","t":11156,"w":6496,"b":667,"a":323,"h":3312,"o":358,"lat":30.1118,"lon":-97.3257},{"n":"Camp Swift","t":8239,"w":2640,"b":504,"a":23,"h":4784,"o":288,"lat":30.1885,"lon":-97.2933}],"nplaces":11,"to":{"g18":[47022,27626],"g20":[51948,36947],"g22":[55835,29363],"g24":[61870,40029],"p18d":[45343,3678],"p18r":[45343,7066],"p20d":[48944,7434],"p20r":[48944,8173],"p22d":[52896,3759],"p22r":[52896,9188],"p24d":[58301,3733],"p24r":[58301,11131],"p26d":[62653,8426],"p26r":[62653,9613]}},"027":{"n":"Bell County","t":386897,"w":164047,"b":83099,"a":11339,"h":101713,"o":26699,"top":[{"n":"Killeen","t":158159,"w":40443,"b":56168,"a":6119,"h":43045,"o":12384,"lat":31.0754,"lon":-97.7296},{"n":"Temple","t":89602,"w":46071,"b":10820,"a":1803,"h":25964,"o":4944,"lat":31.1076,"lon":-97.3894},{"n":"Harker Heights","t":34128,"w":13433,"b":9239,"a":1154,"h":6671,"o":3631,"lat":31.0572,"lon":-97.6445}],"nplaces":14,"to":{"g18":[194853,86905],"g20":[215966,128035],"g22":[228007,88292],"g24":[241417,131431],"p18d":[186393,7482],"p18r":[186393,18962],"p20d":[202355,18305],"p20r":[202355,22924],"p22d":[217512,9217],"p22r":[217512,21081],"p24d":[228685,8857],"p24r":[228685,30453],"p26d":[234576,23644],"p26r":[234576,26358]}},"031":{"n":"Blanco County","t":12446,"w":9394,"b":134,"a":12,"h":2316,"o":590,"top":[{"n":"Blanco","t":2175,"w":1627,"b":6,"a":2,"h":392,"o":148,"lat":30.0987,"lon":-98.4169},{"n":"Johnson City","t":1921,"w":1352,"b":20,"a":10,"h":487,"o":52,"lat":30.2742,"lon":-98.4063},{"n":"Round Mountain","t":81,"w":42,"b":0,"a":0,"h":38,"o":1,"lat":30.4298,"lon":-98.3609}],"nplaces":3,"to":{"g18":[8428,5822],"g20":[9329,7477],"g22":[10155,6792],"g24":[11065,8576],"p18d":[8150,551],"p18r":[8150,1888],"p20d":[8774,1040],"p20r":[8774,2325],"p22d":[9637,463],"p22r":[9637,2806],"p24d":[10642,511],"p24r":[10642,3184],"p26d":[11110,879],"p26r":[11110,3358]}},"035":{"n":"Bosque County","t":18687,"w":13991,"b":206,"a":81,"h":3576,"o":833,"top":[{"n":"Clifton","t":3503,"w":1888,"b":23,"a":24,"h":1274,"o":294,"lat":31.7822,"lon":-97.5824},{"n":"Meridian","t":1638,"w":1188,"b":62,"a":12,"h":362,"o":14,"lat":31.9262,"lon":-97.6501},{"n":"Laguna Park","t":1596,"w":1479,"b":0,"a":23,"h":53,"o":41,"lat":31.8643,"lon":-97.3862}],"nplaces":10,"to":{"g18":[12128,7244],"g20":[12722,9188],"g22":[13088,7490],"g24":[13696,9620],"p18d":[11902,392],"p18r":[11902,2571],"p20d":[12187,721],"p20r":[12187,3860],"p22d":[12651,305],"p22r":[12651,3172],"p24d":[13202,278],"p24r":[13202,3730],"p26d":[13504,549],"p26r":[13504,3546]}},"041":{"n":"Brazos County","t":242311,"w":128323,"b":24497,"a":14123,"h":66411,"o":8957,"top":[{"n":"College Station","t":124570,"w":73989,"b":10104,"a":12164,"h":23585,"o":4728,"lat":30.5852,"lon":-96.296},{"n":"Bryan","t":87939,"w":33648,"b":13838,"a":1352,"h":36068,"o":3033,"lat":30.6657,"lon":-96.3668},{"n":"Lake Bryan","t":2165,"w":586,"b":0,"a":0,"h":1427,"o":152,"lat":30.7188,"lon":-96.4631}],"nplaces":5,"to":{"g18":[113131,64877],"g20":[121439,85067],"g22":[126114,59996],"g24":[134950,92083],"p18d":[105093,5293],"p18r":[105093,12735],"p20d":[116851,12898],"p20r":[116851,18816],"p22d":[121247,4656],"p22r":[121247,16529],"p24d":[127314,3866],"p24r":[127314,21079],"p26d":[138990,13308],"p26r":[138990,17357]}},"051":{"n":"Burleson County","t":18857,"w":11781,"b":2002,"a":123,"h":4276,"o":675,"top":[{"n":"Caldwell","t":4394,"w":2464,"b":342,"a":0,"h":1279,"o":309,"lat":30.5307,"lon":-96.7007},{"n":"Somerville","t":1126,"w":343,"b":211,"a":15,"h":467,"o":90,"lat":30.346,"lon":-96.5311},{"n":"Beaver Creek","t":958,"w":494,"b":8,"a":0,"h":453,"o":3,"lat":null,"lon":null}],"nplaces":9,"to":{"g18":[11745,6606],"g20":[12403,8664],"g22":[12926,6738],"g24":[13960,9402],"p18d":[11510,433],"p18r":[11510,1732],"p20d":[11919,757],"p20r":[11919,3527],"p22d":[12485,406],"p22r":[12485,2521],"p24d":[13331,381],"p24r":[13331,3514],"p26d":[13967,662],"p26r":[13967,2825]}},"053":{"n":"Burnet County","t":52652,"w":37239,"b":656,"a":359,"h":12318,"o":2080,"top":[{"n":"Marble Falls","t":7752,"w":5565,"b":111,"a":35,"h":1884,"o":157,"lat":30.5649,"lon":-98.2768},{"n":"Burnet","t":6732,"w":5133,"b":247,"a":59,"h":994,"o":299,"lat":30.7496,"lon":-98.2383},{"n":"Granite Shoals","t":5328,"w":2499,"b":95,"a":14,"h":2650,"o":70,"lat":30.5897,"lon":-98.3715}],"nplaces":9,"to":{"g18":[30832,18693],"g20":[33629,24925],"g22":[36397,21199],"g24":[39306,28403],"p18d":[29803,1084],"p18r":[29803,4991],"p20d":[31914,2602],"p20r":[31914,6775],"p22d":[34700,1092],"p22r":[34700,9304],"p24d":[37755,1237],"p24r":[37755,9688],"p26d":[39586,2737],"p26r":[39586,9504]}},"055":{"n":"Caldwell County","t":48669,"w":16718,"b":2201,"a":370,"h":27728,"o":1652,"top":[{"n":"Lockhart","t":15326,"w":5996,"b":826,"a":81,"h":8056,"o":367,"lat":29.8785,"lon":-97.6831},{"n":"Luling","t":5531,"w":1598,"b":600,"a":12,"h":3233,"o":88,"lat":29.6814,"lon":-97.6468},{"n":"Martindale","t":1072,"w":414,"b":5,"a":0,"h":635,"o":18,"lat":29.8448,"lon":-97.8396}],"nplaces":3,"to":{"g18":[23626,11526],"g20":[25826,14980],"g22":[25278,11417],"g24":[27170,15820],"p18d":[22911,1836],"p18r":[22911,2406],"p20d":[25073,3028],"p20r":[25073,3192],"p22d":[24379,1424],"p22r":[24379,3593],"p24d":[25704,1568],"p24r":[25704,3896],"p26d":[27268,3394],"p26r":[27268,3551]}},"099":{"n":"Coryell County","t":84748,"w":46080,"b":10976,"a":1665,"h":17559,"o":8468,"top":[{"n":"Copperas Cove","t":37947,"w":19431,"b":4927,"a":792,"h":8334,"o":4463,"lat":31.1192,"lon":-97.914},{"n":"Gatesville","t":16228,"w":8093,"b":2535,"a":209,"h":4281,"o":1110,"lat":31.4419,"lon":-97.7351},{"n":"Evant","t":535,"w":335,"b":0,"a":2,"h":175,"o":23,"lat":31.4762,"lon":-98.1501}],"nplaces":7,"to":{"g18":[38461,16128],"g20":[41373,23430],"g22":[42920,16379],"g24":[47318,23835],"p18d":[37050,878],"p18r":[37050,4882],"p20d":[39167,2450],"p20r":[39167,7172],"p22d":[41097,1212],"p22r":[41097,5599],"p24d":[44710,1021],"p24r":[44710,6335],"p26d":[45909,2878],"p26r":[45909,6409]}},"145":{"n":"Falls County","t":17291,"w":8568,"b":3174,"a":291,"h":4324,"o":934,"top":[{"n":"Marlin","t":5516,"w":1397,"b":2171,"a":242,"h":1536,"o":170,"lat":31.3085,"lon":-96.8934},{"n":"Rosebud","t":1007,"w":452,"b":121,"a":0,"h":401,"o":33,"lat":31.0756,"lon":-96.9749},{"n":"Golinda","t":836,"w":405,"b":164,"a":47,"h":213,"o":7,"lat":31.3711,"lon":-97.0763}],"nplaces":5,"to":{"g18":[10329,4687],"g20":[10338,6135],"g22":[10297,4732],"g24":[10596,6314],"p18d":[10165,337],"p18r":[10165,1654],"p20d":[10111,725],"p20r":[10111,1742],"p22d":[10011,381],"p22r":[10011,1887],"p24d":[10237,368],"p24r":[10237,1981],"p26d":[10665,658],"p26r":[10665,1844]}},"149":{"n":"Fayette County","t":25042,"w":17402,"b":1406,"a":69,"h":5522,"o":643,"top":[{"n":"La Grange","t":4452,"w":2501,"b":548,"a":4,"h":1191,"o":208,"lat":29.9129,"lon":-96.8767},{"n":"Schulenburg","t":2768,"w":1279,"b":352,"a":0,"h":1063,"o":74,"lat":29.682,"lon":-96.9075},{"n":"Flatonia","t":1830,"w":583,"b":61,"a":7,"h":1179,"o":0,"lat":29.6886,"lon":-97.106}],"nplaces":8,"to":{"g18":[16524,10535],"g20":[17352,12962],"g22":[17834,10580],"g24":[18338,13427],"p18d":[16387,737],"p18r":[16387,5133],"p20d":[16801,1243],"p20r":[16801,5076],"p22d":[17386,559],"p22r":[17386,5927],"p24d":[17932,507],"p24r":[17932,5786],"p26d":[18167,924],"p26r":[18167,5806]}},"161":{"n":"Freestone County","t":20049,"w":12677,"b":2908,"a":29,"h":3455,"o":980,"top":[{"n":"Teague","t":3476,"w":1394,"b":408,"a":3,"h":1568,"o":103,"lat":31.6295,"lon":-96.2801},{"n":"Fairfield","t":2924,"w":1629,"b":741,"a":0,"h":540,"o":14,"lat":31.7184,"lon":-96.1697},{"n":"Wortham","t":1160,"w":717,"b":262,"a":0,"h":108,"o":73,"lat":31.7897,"lon":-96.461}],"nplaces":5,"to":{"g18":[11905,6662],"g20":[12462,8756],"g22":[12741,6693],"g24":[13418,9088],"p18d":[11819,396],"p18r":[11819,3170],"p20d":[12029,702],"p20r":[12029,3501],"p22d":[12378,373],"p22r":[12378,3240],"p24d":[12952,316],"p24r":[12952,2931],"p26d":[13398,686],"p26r":[13398,3344]}},"185":{"n":"Grimes County","t":31340,"w":17787,"b":3557,"a":116,"h":7998,"o":1882,"top":[{"n":"Navasota","t":8542,"w":3113,"b":2072,"a":0,"h":3166,"o":191,"lat":30.3874,"lon":-96.0895},{"n":"Plantersville","t":579,"w":360,"b":65,"a":0,"h":137,"o":17,"lat":30.3325,"lon":-95.8633},{"n":"Bedias","t":478,"w":120,"b":12,"a":0,"h":300,"o":46,"lat":30.7792,"lon":-95.9469}],"nplaces":9,"to":{"g18":[16317,8698],"g20":[17840,12415],"g22":[19125,9460],"g24":[21099,14113],"p18d":[15851,566],"p18r":[15851,3017],"p20d":[16771,1138],"p20r":[16771,4049],"p22d":[18285,453],"p22r":[18285,3765],"p24d":[19761,577],"p24r":[19761,5772],"p26d":[21519,1103],"p26r":[21519,4307]}},"193":{"n":"Hamilton County","t":8406,"w":6854,"b":165,"a":3,"h":1196,"o":188,"top":[{"n":"Hamilton","t":2934,"w":2243,"b":8,"a":0,"h":639,"o":44,"lat":31.6997,"lon":-98.1208},{"n":"Hico","t":1771,"w":1479,"b":58,"a":3,"h":217,"o":14,"lat":31.9859,"lon":-98.0291},{"n":"Carlton","t":10,"w":10,"b":0,"a":0,"h":0,"o":0,"lat":null,"lon":null}],"nplaces":3,"to":{"g18":[5575,3342],"g20":[5822,4400],"g22":[5968,3483],"g24":[6264,4495],"p18d":[5483,162],"p18r":[5483,1186],"p20d":[5671,364],"p20r":[5671,2221],"p22d":[5776,88],"p22r":[5776,1578],"p24d":[6096,73],"p24r":[6096,2453],"p26d":[6181,194],"p26r":[6181,1646]}},"209":{"n":"Hays County","t":268638,"w":135533,"b":10310,"a":5325,"h":105942,"o":11528,"top":[{"n":"San Marcos","t":70897,"w":31617,"b":3698,"a":1501,"h":29933,"o":4148,"lat":29.8736,"lon":-97.9381},{"n":"Kyle","t":56823,"w":22111,"b":2554,"a":581,"h":29459,"o":2118,"lat":29.9937,"lon":-97.8859},{"n":"Buda","t":15859,"w":10081,"b":228,"a":50,"h":4835,"o":665,"lat":30.0856,"lon":-97.8472}],"nplaces":13,"to":{"g18":[134654,79975],"g20":[153258,109963],"g22":[167844,89953],"g24":[187568,126675],"p18d":[121937,11653],"p18r":[121937,12027],"p20d":[142027,25324],"p20r":[142027,15391],"p22d":[153261,13243],"p22r":[153261,15684],"p24d":[174009,14987],"p24r":[174009,18089],"p26d":[193013,32779],"p26r":[193013,18382]}},"217":{"n":"Hill County","t":37328,"w":25220,"b":1851,"a":197,"h":8635,"o":1425,"top":[{"n":"Hillsboro","t":8506,"w":3852,"b":896,"a":17,"h":3404,"o":337,"lat":32.0091,"lon":-97.1151},{"n":"Itasca","t":2073,"w":821,"b":146,"a":0,"h":995,"o":111,"lat":32.1586,"lon":-97.1478},{"n":"Whitney","t":2050,"w":1451,"b":11,"a":0,"h":508,"o":80,"lat":31.952,"lon":-97.3192}],"nplaces":14,"to":{"g18":[22595,11445],"g20":[23549,14933],"g22":[25043,11408],"g24":[26875,16790],"p18d":[22202,612],"p18r":[22202,4454],"p20d":[22676,1286],"p20r":[22676,5552],"p22d":[24223,503],"p22r":[24223,4483],"p24d":[25892,491],"p24r":[25892,5828],"p26d":[27498,1122],"p26r":[27498,6004]}},"281":{"n":"Lampasas County","t":22715,"w":15785,"b":899,"a":244,"h":4657,"o":1130,"top":[{"n":"Lampasas","t":7671,"w":5292,"b":128,"a":0,"h":1827,"o":424,"lat":31.064,"lon":-98.1824},{"n":"Kempner","t":1215,"w":749,"b":90,"a":4,"h":278,"o":94,"lat":31.0755,"lon":-97.9727},{"n":"Lometa","t":812,"w":503,"b":7,"a":31,"h":237,"o":34,"lat":31.2166,"lon":-98.3925}],"nplaces":3,"to":{"g18":[13992,7590],"g20":[15396,10431],"g22":[15896,8280],"g24":[16955,11347],"p18d":[13583,390],"p18r":[13583,3191],"p20d":[14508,886],"p20r":[14508,2986],"p22d":[15465,463],"p22r":[15465,4079],"p24d":[16231,454],"p24r":[16231,4440],"p26d":[17188,865],"p26r":[17188,4284]}},"287":{"n":"Lee County","t":17971,"w":10761,"b":1731,"a":42,"h":4774,"o":663,"top":[{"n":"Giddings","t":5151,"w":2192,"b":808,"a":0,"h":1952,"o":199,"lat":30.1833,"lon":-96.9279},{"n":"Lexington","t":1365,"w":983,"b":88,"a":0,"h":268,"o":26,"lat":30.4147,"lon":-97.0093},{"n":"Dime Box","t":145,"w":128,"b":0,"a":0,"h":13,"o":4,"lat":null,"lon":null}],"nplaces":3,"to":{"g18":[10384,5852],"g20":[11121,8122],"g22":[11553,6309],"g24":[12246,8429],"p18d":[10245,358],"p18r":[10245,2396],"p20d":[10643,709],"p20r":[10643,2981],"p22d":[11206,348],"p22r":[11206,2996],"p24d":[11716,307],"p24r":[11716,3115],"p26d":[12068,735],"p26r":[12068,2796]}},"289":{"n":"Leon County","t":16263,"w":11525,"b":1168,"a":24,"h":2712,"o":834,"top":[{"n":"Buffalo","t":1652,"w":981,"b":129,"a":0,"h":529,"o":13,"lat":31.46,"lon":-96.066},{"n":"Jewett","t":1075,"w":317,"b":59,"a":0,"h":553,"o":146,"lat":31.3627,"lon":-96.1455},{"n":"Centerville","t":1053,"w":654,"b":262,"a":0,"h":137,"o":0,"lat":31.258,"lon":-95.9797}],"nplaces":8,"to":{"g18":[11071,6606],"g20":[11684,8722],"g22":[11892,6897],"g24":[12722,9099],"p18d":[10957,226],"p18r":[10957,3397],"p20d":[11291,447],"p20r":[11291,4081],"p22d":[11607,259],"p22r":[11607,3579],"p24d":[12249,187],"p24r":[12249,3598],"p26d":[12551,389],"p26r":[12551,3775]}},"293":{"n":"Limestone County","t":22283,"w":12184,"b":3761,"a":219,"h":5243,"o":876,"top":[{"n":"Mexia","t":6859,"w":2151,"b":1900,"a":43,"h":2670,"o":95,"lat":31.6809,"lon":-96.4833},{"n":"Groesbeck","t":3914,"w":1776,"b":1172,"a":63,"h":800,"o":103,"lat":31.5259,"lon":-96.5284},{"n":"Coolidge","t":754,"w":189,"b":144,"a":0,"h":397,"o":24,"lat":31.7514,"lon":-96.6524}],"nplaces":6,"to":{"g18":[13580,6957],"g20":[13965,9097],"g22":[13959,6869],"g24":[14465,9123],"p18d":[13516,364],"p18r":[13516,3051],"p20d":[13563,781],"p20r":[13563,4493],"p22d":[13704,474],"p22r":[13704,3510],"p24d":[14059,350],"p24r":[14059,3282],"p26d":[14376,945],"p26r":[14376,3500]}},"299":{"n":"Llano County","t":22424,"w":18410,"b":65,"a":142,"h":2995,"o":812,"top":[{"n":"Kingsland","t":7330,"w":4913,"b":11,"a":70,"h":2057,"o":279,"lat":30.6651,"lon":-98.4545},{"n":"Horseshoe Bay","t":4854,"w":4428,"b":5,"a":28,"h":228,"o":165,"lat":30.5403,"lon":-98.3804},{"n":"Llano","t":3494,"w":2962,"b":21,"a":40,"h":323,"o":148,"lat":30.7508,"lon":-98.6763}],"nplaces":7,"to":{"g18":[15603,10276],"g20":[16656,12740],"g22":[17543,11037],"g24":[18457,13657],"p18d":[15115,670],"p18r":[15115,4079],"p20d":[15761,1341],"p20r":[15761,5071],"p22d":[16797,604],"p22r":[16797,5050],"p24d":[17880,543],"p24r":[17880,6462],"p26d":[18267,1003],"p26r":[18267,5894]}},"309":{"n":"McLennan County","t":266067,"w":143918,"b":35929,"a":4499,"h":71761,"o":9960,"top":[{"n":"Waco","t":143570,"w":63404,"b":27671,"a":2964,"h":43971,"o":5560,"lat":31.5598,"lon":-97.1881},{"n":"Hewitt","t":16432,"w":11037,"b":992,"a":810,"h":3024,"o":569,"lat":31.452,"lon":-97.196},{"n":"Robinson","t":12800,"w":7931,"b":845,"a":56,"h":3829,"o":139,"lat":31.4501,"lon":-97.1201}],"nplaces":21,"to":{"g18":[138970,75787],"g20":[149123,98898],"g22":[154088,72956],"g24":[160108,100532],"p18d":[134158,5988],"p18r":[134158,17764],"p20d":[143489,13352],"p20r":[143489,24535],"p22d":[149579,5952],"p22r":[149579,22538],"p24d":[153574,5375],"p24r":[153574,30029],"p26d":[158055,14491],"p26r":[158055,23263]}},"313":{"n":"Madison County","t":13648,"w":7136,"b":2093,"a":155,"h":3573,"o":691,"top":[{"n":"Madisonville","t":4552,"w":1945,"b":1108,"a":0,"h":1432,"o":67,"lat":30.9538,"lon":-95.9091},{"n":"Midway","t":257,"w":140,"b":41,"a":0,"h":52,"o":24,"lat":31.0252,"lon":-95.7539}],"nplaces":2,"to":{"g18":[7397,3836],"g20":[7806,5298],"g22":[8159,3926],"g24":[8468,5504],"p18d":[7242,101],"p18r":[7242,2067],"p20d":[7555,311],"p20r":[7555,2125],"p22d":[7925,163],"p22r":[7925,2279],"p24d":[8213,110],"p24r":[8213,1987],"p26d":[8436,387],"p26r":[8436,1799]}},"331":{"n":"Milam County","t":25567,"w":15749,"b":2065,"a":129,"h":6638,"o":986,"top":[{"n":"Rockdale","t":5523,"w":3621,"b":333,"a":101,"h":1322,"o":146,"lat":30.6542,"lon":-97.0089},{"n":"Cameron","t":5416,"w":1759,"b":952,"a":0,"h":2598,"o":107,"lat":30.8608,"lon":-96.9762},{"n":"Thorndale","t":1113,"w":661,"b":114,"a":0,"h":272,"o":66,"lat":30.6141,"lon":-97.2068}],"nplaces":9,"to":{"g18":[14946,8055],"g20":[15786,10638],"g22":[16374,8380],"g24":[17202,11133],"p18d":[14669,627],"p18r":[14669,3353],"p20d":[15098,1059],"p20r":[15098,4174],"p22d":[15809,526],"p22r":[15809,4281],"p24d":[16701,449],"p24r":[16701,4242],"p26d":[17179,989],"p26r":[17179,3510]}},"333":{"n":"Mills County","t":4511,"w":3298,"b":30,"a":30,"h":947,"o":206,"top":[{"n":"Goldthwaite","t":1843,"w":1185,"b":10,"a":7,"h":566,"o":75,"lat":31.4513,"lon":-98.5736},{"n":"Mullin","t":220,"w":178,"b":2,"a":0,"h":16,"o":24,"lat":31.5552,"lon":-98.6657},{"n":"Priddy","t":92,"w":57,"b":0,"a":0,"h":34,"o":1,"lat":null,"lon":null}],"nplaces":3,"to":{"g18":[3416,2017],"g20":[3413,2506],"g22":[3444,2133],"g24":[3634,2748],"p18d":[3420,45],"p18r":[3420,1272],"p20d":[3351,104],"p20r":[3351,1369],"p22d":[3320,40],"p22r":[3320,1395],"p24d":[3483,43],"p24r":[3483,1632],"p26d":[3596,113],"p26r":[3596,1004]}},"395":{"n":"Robertson County","t":17167,"w":9411,"b":2946,"a":106,"h":3805,"o":899,"top":[{"n":"Hearne","t":4555,"w":876,"b":1865,"a":3,"h":1777,"o":34,"lat":30.877,"lon":-96.5956},{"n":"Franklin","t":1530,"w":982,"b":361,"a":28,"h":90,"o":69,"lat":31.0251,"lon":-96.4874},{"n":"Bremond","t":855,"w":490,"b":147,"a":0,"h":134,"o":84,"lat":31.1657,"lon":-96.676}],"nplaces":4,"to":{"g18":[11597,6333],"g20":[11821,8153],"g22":[11994,6037],"g24":[12615,8198],"p18d":[11437,801],"p18r":[11437,2718],"p20d":[11545,925],"p20r":[11545,2832],"p22d":[11708,436],"p22r":[11708,3030],"p24d":[12256,302],"p24r":[12256,3778],"p26d":[12589,818],"p26r":[12589,2750]}},"411":{"n":"San Saba County","t":5696,"w":3567,"b":141,"a":14,"h":1746,"o":228,"top":[{"n":"San Saba","t":3056,"w":1438,"b":126,"a":14,"h":1401,"o":77,"lat":31.1965,"lon":-98.7244},{"n":"Richland Springs","t":362,"w":124,"b":0,"a":0,"h":141,"o":97,"lat":31.2715,"lon":-98.9486}],"nplaces":2,"to":{"g18":[3734,2078],"g20":[3769,2602],"g22":[3777,2165],"g24":[3790,2725],"p18d":[3687,41],"p18r":[3687,1213],"p20d":[3642,104],"p20r":[3642,1407],"p22d":[3696,46],"p22r":[3696,1291],"p24d":[3717,35],"p24r":[3717,1752],"p26d":[3758,95],"p26r":[3758,1227]}},"453":{"n":"Travis County","t":1330015,"w":623738,"b":104335,"a":104225,"h":433057,"o":64660,"top":[{"n":"Austin","t":979539,"w":460447,"b":71075,"a":87686,"h":312597,"o":47734,"lat":30.3004,"lon":-97.7522},{"n":"Pflugerville","t":65971,"w":22762,"b":11538,"a":6113,"h":22094,"o":3464,"lat":30.452,"lon":-97.6022},{"n":"Lakeway","t":19307,"w":14884,"b":283,"a":1172,"h":2080,"o":888,"lat":30.3547,"lon":-97.9854}],"nplaces":27,"to":{"g18":[785532,484221],"g20":[859748,612696],"g22":[886056,464186],"g24":[928472,587090],"p18d":[735601,113090],"p18r":[735601,39733],"p20d":[823623,226588],"p20r":[823623,42280],"p22d":[844259,110701],"p22r":[844259,47670],"p24d":[888560,102302],"p24r":[888560,53171],"p26d":[920645,205673],"p26r":[920645,54796]}},"477":{"n":"Washington County","t":36647,"w":22514,"b":5191,"a":529,"h":6772,"o":1641,"top":[{"n":"Brenham","t":18641,"w":9156,"b":3684,"a":399,"h":4471,"o":931,"lat":30.1585,"lon":-96.3964},{"n":"Burton","t":174,"w":136,"b":31,"a":0,"h":0,"o":7,"lat":30.1813,"lon":-96.5999}],"nplaces":2,"to":{"g18":[23089,13563],"g20":[23884,17541],"g22":[24626,14130],"g24":[25890,18343],"p18d":[22692,818],"p18r":[22692,5695],"p20d":[23285,1641],"p20r":[23285,5093],"p22d":[23837,820],"p22r":[23837,5890],"p24d":[24902,785],"p24r":[24902,7952],"p26d":[25667,1594],"p26r":[25667,7275]}},"491":{"n":"Williamson County","t":672688,"w":358479,"b":45037,"a":66854,"h":166454,"o":35864,"top":[{"n":"Round Rock","t":127786,"w":58640,"b":14016,"a":10335,"h":37907,"o":6888,"lat":30.5254,"lon":-97.666},{"n":"Georgetown","t":85999,"w":56962,"b":4247,"a":3237,"h":18315,"o":3238,"lat":30.6668,"lon":-97.6953},{"n":"Cedar Park","t":78301,"w":43621,"b":2960,"a":13087,"h":13986,"o":4647,"lat":30.5106,"lon":-97.8196}],"nplaces":17,"to":{"g18":[334440,209257],"g20":[384723,287506],"g22":[415766,226679],"g24":[448434,311074],"p18d":[316153,25685],"p18r":[316153,36281],"p20d":[353153,61114],"p20r":[353153,44247],"p22d":[396229,26354],"p22r":[396229,48163],"p24d":[424747,24700],"p24r":[424747,55766],"p26d":[455181,62334],"p26r":[455181,52082]}}},"region":{"race":{"t":3853605,"w":1955459,"b":358637,"a":212139,"h":1136105,"o":191265},"to":{"g18":[2085876,1213199],"g20":[2294151,1603227],"g22":[2404699,1223959],"g24":[2558368,1649103],"p18d":[1974474,185294],"p18r":[1974474,214084],"p20d":[2173777,389379],"p20r":[2173777,261970],"p22d":[2293065,185320],"p22r":[2293065,266108],"p24d":[2434811,174713],"p24r":[2434811,317056],"p26d":[2557560,384374],"p26r":[2557560,291809]}},"state":{"g18":{"vr":15789044,"to":8401730},"g20":{"vr":16960107,"to":11355339},"g22":{"vr":17713365,"to":8143047},"g24":{"vr":18686517,"to":11460798},"p18d":{"vr":15265096,"to":1105649},"p18r":{"vr":15265096,"to":1586807},"p20d":{"vr":16226525,"to":2129645},"p20r":{"vr":16226525,"to":2029180},"p22d":{"vr":17034502,"to":1099638},"p22r":{"vr":17034502,"to":1971022},"p24d":{"vr":17908587,"to":1047553},"p24r":{"vr":17908587,"to":2335041},"p26d":{"vr":18657918,"to":2203671},"p26r":{"vr":18657918,"to":2157608}}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
+<script>
+const fmt=n=>n.toLocaleString('en-US');
+const pct=(a,b)=>b?100*a/b:0;
+const COLORS={h:'#1f78b4',w:'#6a3d9a',b:'#e6550d',a:'#238b45',o:'#7a7a7a'};
+const ORDER=[{k:'h',label:'Hispanic / Latino'},{k:'w',label:'White'},{k:'b',label:'Black'},{k:'a',label:'Asian'},{k:'o',label:'Other'}];
+const CT=DD.counties, FIPS=Object.keys(CT);
+const GEN=[{k:'g18',y:2018,l:'2018'},{k:'g20',y:2020,l:'2020'},{k:'g22',y:2022,l:'2022'},{k:'g24',y:2024,l:'2024'}];
+const PRI=[{y:2018,d:'p18d',r:'p18r'},{y:2020,d:'p20d',r:'p20r'},{y:2022,d:'p22d',r:'p22r'},{y:2024,d:'p24d',r:'p24r'},{y:2026,d:'p26d',r:'p26r'}];
+const tp=(obj,k)=>{const v=obj[k];return v?pct(v[1]??v.to,v[0]??v.vr):null;};
+const REG_T=DD.region.to, ST_T=DD.state;
+const stateT=k=>{const v=ST_T[k];return pct(v.to,v.vr);};
+const regT=k=>{const v=REG_T[k];return pct(v[1],v[0]);};
+
+/* ---------- color helpers ---------- */
+function hexToRgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function rgbToHex(a){return '#'+a.map(x=>Math.round(Math.max(0,Math.min(255,x))).toString(16).padStart(2,'0')).join('');}
+function mix(c1,c2,t){const a=hexToRgb(c1),b=hexToRgb(c2);return rgbToHex([0,1,2].map(i=>a[i]+(b[i]-a[i])*t));}
+function ramp(color,n=7){const light=mix(color,'#ffffff',0.90),dark=mix(color,'#000000',0.10),out=[];for(let i=0;i<n;i++)out.push(mix(light,dark,i/(n-1)));return out;}
+function classIndex(breaks,v){for(let i=0;i<breaks.length-1;i++){if(v>=breaks[i]&&v<breaks[i+1])return i;}return v>=breaks[breaks.length-1]?breaks.length-2:0;}
+
+/* ---------- modes ---------- */
+const MODES={
+  t24:{label:'Turnout · 2024 general',color:'#0f5fa6',kind:'seq',breaks:[40,50,55,60,65,70,75,85],unit:'%',val:f=>tp(CT[f].to,'g24'),title:'2024 general turnout — ballots ÷ registered voters'},
+  t22:{label:'Turnout · 2022 midterm',color:'#0f5fa6',kind:'seq',breaks:[30,40,45,50,55,60,65,75],unit:'%',val:f=>tp(CT[f].to,'g22'),title:'2022 general (midterm) turnout — ballots ÷ registered voters'},
+  chg:{label:'Change ’18 → ’24',color:null,kind:'div',breaks:[-8,-4,-2,-1,1,2,4,8],unit:' pts',val:f=>tp(CT[f].to,'g24')-tp(CT[f].to,'g18'),title:'Turnout change: 2018 general → 2024 general (percentage points)'},
+  p26d:{label:'2026 Dem primary turnout',color:'#2171b5',kind:'seq',breaks:[0,3,5,8,12,16,20,30],unit:'%',val:f=>tp(CT[f].to,'p26d'),title:'March 2026 Democratic primary — governor-race votes ÷ registered voters'},
+  p26r:{label:'2026 GOP primary turnout',color:'#cb181d',kind:'seq',breaks:[0,5,8,11,14,17,20,30],unit:'%',val:f=>tp(CT[f].to,'p26r'),title:'March 2026 Republican primary — governor-race votes ÷ registered voters'},
+  h:{label:'Hispanic / Latino %',color:COLORS.h,kind:'seq',breaks:[0,10,20,30,40,50,70,100],unit:'%',val:f=>pct(CT[f].h,CT[f].t),title:'Hispanic / Latino share of population'},
+  w:{label:'White %',color:COLORS.w,kind:'seq',breaks:[0,10,25,40,55,70,85,100],unit:'%',val:f=>pct(CT[f].w,CT[f].t),title:'White (non-Hispanic) share of population'},
+  b:{label:'Black %',color:COLORS.b,kind:'seq',breaks:[0,2,5,10,15,20,30,45],unit:'%',val:f=>pct(CT[f].b,CT[f].t),title:'Black share of population'},
+  a:{label:'Asian %',color:COLORS.a,kind:'seq',breaks:[0,1,2,4,7,10,15,20],unit:'%',val:f=>pct(CT[f].a,CT[f].t),title:'Asian share of population'},
+  dom:{label:'Dominant group',color:'linear-gradient(90deg,#1f78b4,#6a3d9a,#e6550d,#238b45)',kind:'dom',val:f=>dominant(CT[f]),title:'Largest racial / ethnic group in each county'}
+};
+function dominant(d){let best='h',bv=-1;for(const k of ['h','w','b','a']){if(d[k]>bv){bv=d[k];best=k;}}return best;}
+let mode='t24';
+const RAMPS={};Object.entries(MODES).forEach(([k,m])=>{if(m.kind==='seq')RAMPS[k]=ramp(m.color);});
+const DIV=['#0b3d82','#4a86c8','#a9c6e6','#eef0f4','#f2b28a','#d9662d','#8a2a06'];
+function fillFor(f){
+  const m=MODES[mode];const v=m.val(f);if(v==null)return '#ddd';
+  if(m.kind==='seq')return RAMPS[mode][classIndex(m.breaks,v)];
+  if(m.kind==='div')return DIV[classIndex(m.breaks,v)];
+  return COLORS[v];
+}
+function valText(f){const m=MODES[mode];const v=m.val(f);if(m.kind==='dom')return ORDER.find(o=>o.k===v).label.split(' ')[0];return (m.kind==='div'&&v>0?'+':'')+v.toFixed(1)+(m.unit==='%'?'%':'');}
+
+const modesEl=document.getElementById('modes');
+Object.entries(MODES).forEach(([id,m])=>{const b=document.createElement('button');b.dataset.mode=id;
+  const bg=m.kind==='div'?'linear-gradient(90deg,#0b3d82,#eef0f4,#8a2a06)':m.color;
+  b.innerHTML=`<span class="dot" style="background:${bg}"></span>${m.label}`;b.onclick=()=>setMode(id);modesEl.appendChild(b);});
+function setMode(id){mode=id;document.querySelectorAll('#modes button').forEach(b=>{const on=b.dataset.mode===id;b.classList.toggle('active',on);
+  const m=MODES[b.dataset.mode];b.style.background=on?(m.kind==='div'?'#334155':(m.kind==='dom'?'#334155':m.color)):'#fff';});paint();renderLegend();}
+
+/* ---------- legend ---------- */
+function renderLegend(){
+  const m=MODES[mode],el=document.getElementById('legend');let rows='';
+  if(m.kind==='dom'){rows=ORDER.slice(0,4).map(o=>`<div class="lrow"><span class="lsw" style="background:${COLORS[o.k]}"></span>${o.label} is largest group</div>`).join('');}
+  else{const r=m.kind==='seq'?RAMPS[mode]:DIV;for(let i=0;i<m.breaks.length-1;i++)rows+=`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${m.kind==='div'&&m.breaks[i]>0?'+':''}${m.breaks[i]} to ${m.kind==='div'&&m.breaks[i+1]>0?'+':''}${m.breaks[i+1]}${m.unit==='%'?'%':' pts'}</div>`;}
+  el.innerHTML=`<h3>${m.title}</h3>${rows}<div class="legdesc">${legendNote()}</div>`;
+}
+function legendNote(){
+  if(mode==='t24')return `Region: <b>${regT('g24').toFixed(1)}%</b> · Texas: <b>${stateT('g24').toFixed(1)}%</b>. Source: Texas Legislative Council election data (registered voters &amp; ballots cast by county).`;
+  if(mode==='t22')return `Region: <b>${regT('g22').toFixed(1)}%</b> · Texas: <b>${stateT('g22').toFixed(1)}%</b>. Midterm turnout is the best like-for-like comparison for November 2026.`;
+  if(mode==='chg')return `Blue = turnout fell between the 2018 and 2024 generals; orange = it rose. Region: ${(regT('g24')-regT('g18')).toFixed(1)>0?'+':''}${(regT('g24')-regT('g18')).toFixed(1)} pts · Texas: +${(stateT('g24')-stateT('g18')).toFixed(1)} pts.`;
+  if(mode==='p26d')return `Region: <b>${regT('p26d').toFixed(1)}%</b> of registered voters cast a Democratic governor-primary ballot (vs ${regT('p24d').toFixed(1)}% in 2024). Texas: ${stateT('p26d').toFixed(1)}%. Votes in the governor race are used as the ballots-cast proxy.`;
+  if(mode==='p26r')return `Region: <b>${regT('p26r').toFixed(1)}%</b> (vs ${regT('p24r').toFixed(1)}% in 2024). Texas: ${stateT('p26r').toFixed(1)}%.`;
+  return `Source: U.S. Census ACS 2020–2024 5-year (B03002). Region total ${fmt(DD.region.race.t)} people.`;
+}
+
+/* ---------- map ---------- */
+const svg=d3.select('#map'),gMap=svg.append('g'),gCounty=gMap.append('g'),gLbl=gMap.append('g'),gCity=gMap.append('g');
+const tip=document.getElementById('tip');const W=980,H=770;
+let path,projection,zoom,selFips=null,features=[];
+function paint(){gCounty.selectAll('path.county').attr('fill',d=>fillFor(d.fips));gLbl.selectAll('.ctyVal').text(d=>valText(d.fips));}
+function showTip(ev,f){
+  const d=CT[f];const m=MODES[mode];
+  const top=d.top[0]?`<br><span style="opacity:.7">● ${d.top.slice(0,3).map(c=>c.n).join(' · ')}</span>`:'';
+  tip.innerHTML=`<b>${d.n}</b><br>${m.label}: <b>${valText(f)}</b><br><span style="opacity:.7">pop. ${fmt(d.t)} · 2024 turnout ${tp(d.to,'g24').toFixed(1)}%</span>${top}`;
+  const r=document.getElementById('mapwrap').getBoundingClientRect();
+  tip.style.left=(ev.clientX-r.left+15)+'px';tip.style.top=(ev.clientY-r.top+14)+'px';tip.style.opacity=1;
+}
+function select(f){selFips=f;const k=d3.zoomTransform(svg.node()).k||1;gCounty.selectAll('path.county').classed('sel',d=>d.fips===f).style('stroke-width',d=>((d.fips===f?2.4:0.9)/k)+'px');renderCounty(f);}
+function zoomTo(f){
+  const node=gCounty.selectAll('path.county').filter(d=>d.fips===f).node();if(!node||!zoom)return;
+  const b=node.getBBox();const k=Math.max(1,Math.min(6,0.45*Math.min(W/b.width,H/b.height)));
+  const tx=W/2-k*(b.x+b.width/2),ty=H/2-k*(b.y+b.height/2);
+  svg.transition().duration(650).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(k));
+}
+
+/* ---------- panel: race bars ---------- */
+function raceBars(d){
+  const rows=ORDER.map(o=>({...o,count:d[o.k],pc:pct(d[o.k],d.t)})).sort((a,b)=>b.count-a.count);const max=Math.max(...rows.map(r=>r.count),1);
+  return rows.map(r=>`<div class="bar"><div class="top"><span class="nm"><i style="background:${COLORS[r.k]}"></i>${r.label}</span><span class="vals"><b>${fmt(r.count)}</b> · ${r.pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="width:${(100*r.count/max).toFixed(1)}%;background:${COLORS[r.k]}"></div></div></div>`).join('');
+}
+function stack(d){return `<div class="stack">${ORDER.map(o=>`<span style="width:${pct(d[o.k],d.t).toFixed(1)}%;background:${COLORS[o.k]}" title="${o.label} ${pct(d[o.k],d.t).toFixed(1)}%"></span>`).join('')}</div>`;}
+function cityCard(c,i){
+  return `<div class="cityrow"><div class="ch"><span><b>${i+1}. ${c.n}</b></span><span class="cp">${fmt(c.t)} people</span></div>${stack(c)}
+    <div class="pcts">${ORDER.map(o=>`<span><i style="background:${COLORS[o.k]}"></i>${o.label.split(' ')[0]} ${pct(c[o.k],c.t).toFixed(0)}%</span>`).join('')}</div></div>`;
+}
+
+/* ---------- panel: turnout chart (SVG, single axis) ---------- */
+function lineChart(series,opts){
+  // series: [{name,color,pts:[{x,y}],dash}] ; x = year
+  const w=364,h=170,ml=34,mr=48,mt=12,mb=22;const iw=w-ml-mr,ih=h-mt-mb;
+  const xs=[...new Set(series.flatMap(s=>s.pts.map(p=>p.x)))].sort();
+  const ally=series.flatMap(s=>s.pts.map(p=>p.y)).filter(v=>v!=null);
+  let y0=Math.floor(Math.min(...ally)/10)*10,y1=Math.ceil(Math.max(...ally)/10)*10;if(y1-y0<20){y1=y0+20;}
+  const X=x=>ml+iw*(xs.indexOf(x))/(xs.length-1),Y=y=>mt+ih*(1-(y-y0)/(y1-y0));
+  const ticks=d3.ticks(y0,y1,4);
+  let s=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${opts.title}">`;
+  ticks.forEach(t=>{s+=`<line class="grid" x1="${ml}" x2="${w-mr}" y1="${Y(t)}" y2="${Y(t)}"/><text class="ax" x="${ml-5}" y="${Y(t)+3}" text-anchor="end">${t}%</text>`;});
+  xs.forEach(x=>{s+=`<text class="ax" x="${X(x)}" y="${h-6}" text-anchor="middle">${x}</text>`;});
+  series.forEach(sr=>{const pts=sr.pts.filter(p=>p.y!=null);
+    s+=`<path class="ln${sr.dash?' dash':''}" stroke="${sr.color}" d="${pts.map((p,i)=>(i?'L':'M')+X(p.x).toFixed(1)+' '+Y(p.y).toFixed(1)).join(' ')}"/>`;
+    pts.forEach(p=>{s+=`<circle class="pt" cx="${X(p.x)}" cy="${Y(p.y)}" r="3.6" fill="${sr.color}"><title>${sr.name} ${p.x}: ${p.y.toFixed(1)}%${p.note?' — '+p.note:''}</title></circle>`;});
+    const last=pts[pts.length-1];if(last&&opts.labelEnd)s+=`<text class="dl" x="${X(last.x)+7}" y="${Y(last.y)+3.5}">${last.y.toFixed(1)}%</text>`;
+  });
+  s+='</svg>';
+  s+=`<div class="leg">${series.map(sr=>`<span><i style="background:${sr.color}"></i>${sr.name}</span>`).join('')}</div>`;
+  return s;
+}
+function genSeries(f){ // county (optional), region, texas
+  const out=[];
+  if(f)out.push({name:CT[f].n.replace(' County',''),color:'var(--cty)',pts:GEN.map(g=>({x:g.y,y:tp(CT[f].to,g.k),note:`${fmt(CT[f].to[g.k][1])} of ${fmt(CT[f].to[g.k][0])} registered`}))});
+  out.push({name:'Central TX region',color:'var(--reg)',pts:GEN.map(g=>({x:g.y,y:regT(g.k)}))});
+  out.push({name:'Texas',color:'var(--tx)',pts:GEN.map(g=>({x:g.y,y:stateT(g.k)}))});
+  return out;
+}
+function priSeries(f){
+  const src=f?(k=>tp(CT[f].to,k)):regT;
+  return [
+    {name:'Democratic primary',color:'var(--dem)',pts:PRI.map(p=>({x:p.y,y:src(p.d),note:p.y===2026?'governor-race votes':''}))},
+    {name:'Republican primary',color:'var(--rep)',pts:PRI.map(p=>({x:p.y,y:src(p.r),note:p.y===2026?'governor-race votes':''}))}
+  ];
+}
+function turnoutTable(f){
+  const get=k=>f?CT[f].to[k]:REG_T[k];
+  const rows=[...GEN.map(g=>({l:`${g.y} general`,k:g.k})),...PRI.flatMap(p=>[{l:`${p.y} Dem primary`,k:p.d},{l:`${p.y} GOP primary`,k:p.r}])];
+  return `<table class="tt"><tr><th>Election</th><th>Registered</th><th>Ballots</th><th>Turnout</th></tr>${rows.map(r=>{const v=get(r.k);return `<tr><td>${r.l}</td><td>${fmt(v[0])}</td><td>${fmt(v[1])}</td><td><b>${pct(v[1],v[0]).toFixed(1)}%</b></td></tr>`;}).join('')}</table>`;
+}
+let showTable=false;
+function turnoutBlock(f){
+  return `<div class="sect"><span>General-election turnout</span><span class="note">% of registered voters</span></div>
+    ${lineChart(genSeries(f),{title:'General election turnout 2018–2024',labelEnd:true})}
+    <div class="sect"><span>Primary turnout</span><span class="note">${f?CT[f].n.replace(' County',''):'region'} · % of registered</span></div>
+    ${lineChart(priSeries(f),{title:'Primary turnout 2018–2026',labelEnd:true})}
+    <div class="btnrow"><button id="tblbtn" class="${showTable?'active':''}">${showTable?'Hide':'Show'} numbers</button></div>
+    ${showTable?turnoutTable(f):''}
+    <div class="hint">Primaries are a different kind of election (only one party's ballot per voter), so they sit on their own chart. 2026 primary uses votes cast in the governor race as the ballots-cast proxy; the Texas Legislative Council has not yet published 2026 county turnout files.</div>`;
+}
+function wireTable(f){const b=document.getElementById('tblbtn');if(b)b.onclick=()=>{showTable=!showTable;f?renderCounty(f):renderRegion();};}
+
+/* ---------- panel: county ---------- */
+function renderCounty(f){
+  const d=CT[f],el=document.getElementById('detail');
+  const rankPop=[...FIPS].sort((a,b)=>CT[b].t-CT[a].t).indexOf(f)+1;
+  const rankT=[...FIPS].sort((a,b)=>tp(CT[b].to,'g24')-tp(CT[a].to,'g24')).indexOf(f)+1;
+  el.innerHTML=`<span class="back" id="back">← Region rundown</span>
+    <div class="cty">${d.n}</div>
+    <div class="tot">Population <b>${fmt(d.t)}</b> (#${rankPop} of 30) · 2024 turnout <b>${tp(d.to,'g24').toFixed(1)}%</b> (#${rankT} of 30) · ${d.nplaces} places</div>
+    <div class="sect"><span>Race &amp; ethnicity</span><span class="note">ACS 2020–24</span></div>${raceBars(d)}
+    <div class="sect"><span>Largest cities &amp; towns</span><span class="note">top ${Math.min(3,d.top.length)} by population</span></div>
+    ${d.top.slice(0,3).map(cityCard).join('')}
+    <div class="hint">Cities that straddle county lines are counted once, in their primary county (e.g. Round Rock, Cedar Park and Leander under Williamson; Copperas Cove under Coryell).</div>
+    ${turnoutBlock(f)}`;
+  document.getElementById('back').onclick=()=>{selFips=null;const k=d3.zoomTransform(svg.node()).k||1;gCounty.selectAll('path.county').classed('sel',false).style('stroke-width',(0.9/k)+'px');renderRegion();};
+  wireTable(f);
+}
+
+/* ---------- panel: region rundown ---------- */
+let sortKey='t';
+function renderRegion(){
+  const el=document.getElementById('detail');const R=DD.region.race;
+  const cos=[...FIPS].map(f=>({f,...CT[f],t24:tp(CT[f].to,'g24'),chg:tp(CT[f].to,'g24')-tp(CT[f].to,'g18'),d26:tp(CT[f].to,'p26d')}));
+  cos.sort((a,b)=>sortKey==='n'?a.n.localeCompare(b.n):b[sortKey]-a[sortKey]);
+  const cmax=Math.max(...cos.map(c=>c[sortKey==='n'?'t':sortKey]));
+  const colLbl={t:'pop.',t24:'2024 turnout',chg:'’18→’24',d26:'’26 Dem primary'};
+  el.innerHTML=`<div class="cty">Central Texas / Austin region</div>
+    <div class="tot">30 counties · <b>${fmt(R.t)}</b> people · 2024 turnout <b>${regT('g24').toFixed(1)}%</b> · ${fmt(REG_T.g24[0])} registered</div>
+    <div class="sect"><span>Region race &amp; ethnicity</span><span class="note">ACS 2020–24</span></div>${raceBars(R)}
+    <div class="sect"><span>Largest cities in the region</span><span class="note">top 8</span></div>
+    ${[...FIPS].flatMap(f=>CT[f].top.map(c=>({...c,cty:CT[f].n.replace(' County',''),f}))).sort((a,b)=>b.t-a.t).slice(0,8).map((c,i)=>`<div class="ctyrow" data-f="${c.f}"><span class="ci"><b>${i+1}.</b> ${c.n} <span style="color:var(--muted)">· ${c.cty}</span></span><span class="cp">${fmt(c.t)}</span></div>`).join('')}
+    ${turnoutBlock(null)}
+    <div class="sect"><span>Counties</span><span class="note">sort:
+      ${['t','t24','chg','d26','n'].map(k=>`<a href="#" data-s="${k}" style="color:${sortKey===k?'var(--ink)':'var(--accent)'};text-decoration:none;font-weight:${sortKey===k?700:400};margin-left:6px">${k==='n'?'A–Z':colLbl[k]}</a>`).join('')}</span></div>
+    <div class="ctyrows">${cos.map((c,i)=>`<div class="ctyrow" data-f="${c.f}"><span class="ci"><b>${i+1}.</b> ${c.n.replace(' County','')}<i style="width:9px;height:9px;border-radius:2px;display:inline-block;background:${COLORS[dominant(c)]}" title="largest group"></i></span>
+        <span class="cp"><span>${fmt(c.t)}</span><b>${c.t24.toFixed(1)}%</b><span style="color:${c.chg>=0?'#8a2a06':'#0b3d82'}">${c.chg>=0?'+':''}${c.chg.toFixed(1)}</span></span>
+        <div class="cbar" style="width:${(100*(sortKey==='n'?c.t:c[sortKey])/cmax).toFixed(1)}%;background:${fillFor(c.f)}"></div></div>`).join('')}</div>
+    <div class="hint">Columns: population · 2024 general turnout · change in turnout 2018→2024 (pts). Dot = largest racial/ethnic group. Click a county for its cities and full trend lines.</div>`;
+  el.querySelectorAll('.ctyrow').forEach(row=>row.onclick=()=>{select(row.dataset.f);zoomTo(row.dataset.f);});
+  el.querySelectorAll('[data-s]').forEach(a=>a.onclick=e=>{e.preventDefault();sortKey=a.dataset.s;renderRegion();});
+  wireTable(null);
+}
+
+/* ---------- search ---------- */
+const dl=document.getElementById('ctylist'),nameToFips={};
+FIPS.forEach(f=>{const o=document.createElement('option');o.value=CT[f].n;dl.appendChild(o);nameToFips[CT[f].n.toLowerCase()]=f;
+  CT[f].top.forEach(c=>{const o2=document.createElement('option');o2.value=`${c.n} (${CT[f].n.replace(' County','')})`;dl.appendChild(o2);nameToFips[o2.value.toLowerCase()]=f;nameToFips[c.n.toLowerCase()]=nameToFips[c.n.toLowerCase()]||f;});});
+document.getElementById('search').addEventListener('change',e=>{const f=nameToFips[e.target.value.trim().toLowerCase()];if(f){select(f);zoomTo(f);}});
+
+/* ---------- geometry ---------- */
+function detectGeoid(p,id){
+  if(p){for(const k of ['GEOID','geoid','GEO_ID','FIPS','fips','id','COUNTYFP']){if(p[k]!=null){let v=String(p[k]);if(k==='GEO_ID'&&v.includes('US'))v=v.split('US')[1];if(v.length===3&&p.STATE)v=String(p.STATE)+v;if(v.length===5)return v;}}}
+  if(id!=null){const v=String(id).padStart(5,'0');if(v.length===5)return v;}return null;
+}
+async function loadGeometry(){
+  const sources=[
+    {url:'https://cdn.jsdelivr.net/gh/deldersveld/topojson@master/countries/us-states/TX-48-texas-counties.json',type:'topo'},
+    {url:'https://cdn.jsdelivr.net/gh/plotly/datasets@master/geojson-counties-fips.json',type:'geo'}
+  ];
+  for(const s of sources){
+    try{
+      const res=await fetch(s.url);if(!res.ok)throw new Error(res.status);const j=await res.json();
+      let feats;
+      if(s.type==='topo'){const key=Object.keys(j.objects)[0];feats=topojson.feature(j,j.objects[key]).features;}else feats=j.features;
+      feats=feats.map(ft=>{const g=detectGeoid(ft.properties,ft.id);ft.geoid=g;ft.fips=g?g.slice(-3):null;return ft;}).filter(ft=>ft.geoid&&ft.geoid.slice(0,2)==='48'&&CT[ft.fips]);
+      if(feats.length>=28)return feats;
+    }catch(e){}
+  }
+  throw new Error('No geometry source available');
+}
+(async function init(){
+  try{features=await loadGeometry();}catch(e){document.getElementById('loading').innerHTML='<div class="err">Could not load county boundaries (needs internet access to cdn.jsdelivr.net).</div>';return;}
+  const fc={type:'FeatureCollection',features};
+  projection=d3.geoConicConformal().parallels([27.41666667,34.91666667]).rotate([100,0]).fitExtent([[30,30],[W-30,H-30]],fc);
+  path=d3.geoPath(projection);
+  gCounty.selectAll('path.county').data(features).enter().append('path').attr('class','county').attr('d',path)
+    .on('mousemove',(ev,d)=>showTip(ev,d.fips)).on('mouseleave',()=>tip.style.opacity=0)
+    .on('click',(ev,d)=>{select(d.fips);});
+  const lbl=gLbl.selectAll('g.l').data(features).enter().append('g').attr('class','l').attr('transform',d=>{const c=path.centroid(d);return `translate(${c[0]},${c[1]})`;});
+  lbl.append('text').attr('class','ctyLbl').attr('y',-2).text(d=>CT[d.fips].n.replace(' County',''));
+  lbl.append('text').attr('class','ctyVal').attr('y',10).text(d=>valText(d.fips));
+  // top-3 city dots (those with coordinates)
+  const cities=FIPS.flatMap(f=>CT[f].top.slice(0,3).filter(c=>c.lat!=null).map((c,i)=>({...c,rank:i,f})));
+  const cg=gCity.selectAll('g.city').data(cities).enter().append('g').attr('class','city').attr('transform',d=>{const p=projection([d.lon,d.lat]);return `translate(${p[0]},${p[1]})`;});
+  cg.append('circle').attr('class','cityDot').attr('r',d=>d.t>50000?3.2:(d.t>10000?2.4:1.8));
+  cg.append('text').attr('class','cityLbl').attr('x',5).attr('y',3.5).attr('display','none').text(d=>d.n);
+  zoom=d3.zoom().scaleExtent([1,8]).on('zoom',e=>{
+    gMap.attr('transform',e.transform);const k=e.transform.k;
+    gCity.selectAll('.cityDot').attr('r',d=>(d.t>50000?3.2:(d.t>10000?2.4:1.8))/k*Math.min(1.6,Math.sqrt(k))).style('stroke-width',(1.1/k)+'px');
+    gCity.selectAll('.cityLbl').attr('display',d=>((k>=1.5&&d.t>=50000)||(k>=2.2&&d.t>=10000)||k>=3.5)?null:'none').style('font-size',(10/k)+'px').style('stroke-width',(2.6/k)+'px').attr('x',5/k).attr('y',3.5/k);
+    gLbl.selectAll('.ctyLbl').style('font-size',(10.5/k)+'px').style('stroke-width',(2.6/k)+'px').attr('y',-2/k);
+    gLbl.selectAll('.ctyVal').style('font-size',(9.5/k)+'px').style('stroke-width',(2.4/k)+'px').attr('y',10/k);
+    gCounty.selectAll('.county').style('stroke-width',d=>((d.fips===selFips?2.4:0.9)/k)+'px');
+  });
+  svg.call(zoom);
+  document.getElementById('zin').onclick=()=>svg.transition().call(zoom.scaleBy,1.6);
+  document.getElementById('zout').onclick=()=>svg.transition().call(zoom.scaleBy,0.625);
+  document.getElementById('zreset').onclick=()=>svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity);
+  document.getElementById('tCities').onchange=e=>gCity.attr('display',e.target.checked?null:'none');
+  document.getElementById('tVals').onchange=e=>gLbl.selectAll('.ctyVal').attr('display',e.target.checked?null:'none');
+  document.getElementById('loading').style.display='none';
+  setMode('t24');renderRegion();
+  document.getElementById('foot').innerHTML=`Region (30 counties): 2018 ${regT('g18').toFixed(1)}% · 2020 ${regT('g20').toFixed(1)}% · 2022 ${regT('g22').toFixed(1)}% · 2024 ${regT('g24').toFixed(1)}% general turnout; 2026 primaries — Dem ${regT('p26d').toFixed(1)}%, GOP ${regT('p26r').toFixed(1)}%. Sources: Texas Legislative Council election data (registered voters &amp; ballots cast by VTD, summed to county; 2018–2024); Texas Secretary of State March 2026 registration &amp; governor-primary results; U.S. Census Bureau ACS 2020–2024 5-year (B03002) via Census Reporter.`;
+})();
+</script>
+</body>
+</html>
