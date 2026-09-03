@@ -115,7 +115,7 @@
     <div class="modes" id="modes"><span class="lbl">Color by</span></div>
     <div class="modes" id="pick" style="margin-top:8px">
       <span class="lbl">Election</span><select id="elA" class="sel"></select>
-      <span class="lbl" id="lblB" style="margin-left:6px">Compare to</span><select id="elB" class="sel"></select>
+      <span class="lbl" id="lblB" style="margin-left:6px" title="Pick a second election to switch to the change map">Compare to</span><select id="elB" class="sel"></select>
     </div>
   </header>
   <main>
@@ -201,11 +201,11 @@ Object.entries(MODES).forEach(([id,m])=>{const b=document.createElement('button'
   b.innerHTML=`<span class="dot" style="background:${bg}"></span>${m.label}`;b.onclick=()=>setMode(id);modesEl.appendChild(b);});
 function setMode(id){mode=id;document.querySelectorAll('#modes button').forEach(b=>{const on=b.dataset.mode===id;b.classList.toggle('active',on);
   const m=MODES[b.dataset.mode];b.style.background=on?(m.kind==='div'?'#334155':(m.kind==='dom'?'#334155':m.color)):'#fff';});
-  const isT=id==='turnout'||id==='chg';document.getElementById('pick').style.opacity=isT?1:.45;document.getElementById('elA').disabled=!isT;document.getElementById('elB').disabled=id!=='chg';document.getElementById('lblB').style.opacity=id==='chg'?1:.45;paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}
+  const isT=id==='turnout'||id==='chg';document.getElementById('pick').style.opacity=isT?1:.6;document.getElementById('lblB').style.opacity=id==='chg'?1:.6;document.getElementById('elB').style.opacity=id==='chg'?1:.7;paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}
 
 /* ---------- election pickers ---------- */
 ['elA','elB'].forEach(id=>{const sel=document.getElementById(id);ELECTIONS.forEach(e=>{const o=document.createElement('option');o.value=e.k;o.textContent=e.l;sel.appendChild(o);});
-  sel.value=id==='elA'?elA:elB;sel.onchange=()=>{if(id==='elA')elA=sel.value;else elB=sel.value;if(mode!=='turnout'&&mode!=='chg')setMode(id==='elB'?'chg':'turnout');else{paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}};});
+  sel.value=id==='elA'?elA:elB;sel.onchange=()=>{if(id==='elA')elA=sel.value;else elB=sel.value;const want=id==='elB'?'chg':(mode==='chg'?'chg':'turnout');if(mode!==want)setMode(want);else{paint();renderLegend();if(selFips)renderCounty(selFips);else renderRegion();}};});
 
 /* ---------- legend ---------- */
 function renderLegend(){
