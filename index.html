@@ -28,8 +28,17 @@
   h1{font-size:15px}
   .sub{display:none}
   nav{flex-wrap:nowrap;overflow-x:auto;margin-top:8px;padding-bottom:3px;-webkit-overflow-scrolling:touch}
-  nav a{flex:0 0 auto}
+  nav button{flex:0 0 auto}
 }
+/* phone launcher (no iframe — iOS Safari can't scroll/size iframed map pages reliably) */
+#launch{display:none;padding:14px;gap:10px;flex-direction:column;overflow-y:auto}
+#launch a{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);font-size:15px;font-weight:600;box-shadow:0 1px 3px rgba(20,27,38,.06)}
+#launch a .dot{width:14px;height:14px;border-radius:4px;flex:none}
+#launch a small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+#launch .note{font-size:12px;color:var(--muted);line-height:1.5;padding:4px 2px}
+body.phone .frwrap{display:none}
+body.phone nav{display:none}
+body.phone #launch{display:flex;flex:1}
 </style>
 </head>
 <body>
@@ -45,6 +54,7 @@
     <iframe id="frame" title="map" src=""></iframe>
     <div class="loading" id="loading">Loading map…</div>
   </div>
+  <div id="launch"></div>
 </div>
 <script>
   const MAPS=[
@@ -57,6 +67,14 @@
     {label:'Central Texas Deep Dive', file:'texas_central_deepdive.html',   color:'#0891b2'},
     {label:'Data Center Watch', file:'texas_data_center_map.html',          color:'#4a0404'}
   ];
+  const DESC={'tx_region_builder.html':'Regional campaign map · officials & candidates','tx_districts_map.html':'Congress, House, Senate, SBOE · county precincts · cities','texas_race_map.html':'Race & ethnicity by county · largest cities','texas_families_households_map.html':'Families & households','texas_rural_ses_map.html':'Rural–urban & socioeconomic','texas_elections_map.html':'2022 · 2024 · 2026 primary results','texas_central_deepdive.html':'30 Central TX counties · turnout trends · top-3 cities','texas_data_center_map.html':'Data center projects & opposition (large page)'};
+  const PHONE=window.matchMedia('(max-width:760px)').matches;
+  if(PHONE){
+    document.body.classList.add('phone');
+    const L=document.getElementById('launch');
+    L.innerHTML=MAPS.map(m=>`<a href="${m.file}"><span class="dot" style="background:${m.color}"></span><span>${m.label}<small>${DESC[m.file]||''}</small></span></a>`).join('')+
+      '<div class="note">On a phone each map opens as its own page; use the “All maps” button on the map to come back here. Maps load live data and work best over Wi-Fi.</div>';
+  }
   const tabs=document.getElementById('tabs');
   const frame=document.getElementById('frame');
   const loading=document.getElementById('loading');
@@ -81,7 +99,7 @@
   // open the tab named in the URL hash, else the first map
   const want=decodeURIComponent((location.hash||'').replace('#',''));
   const start=Math.max(0,MAPS.findIndex(m=>m.file.replace('.html','')===want));
-  show(start);
+  if(!PHONE) show(start);
 </script>
 </body>
 </html>
