@@ -243,8 +243,7 @@ function peopleFor(county, pct){
   return out;
 }
 function personRow(x){
-  var st = /candidate|nominee/i.test(x.s+' '+x.o) && !/in office/i.test(x.s) ? 'candidate' : 'inc';
-  var tag = st==='candidate' ? '<span class="tag candidate">Candidate</span>' : '<span class="tag inc">In office</span>';
+  var tag = /incoming/i.test(x.s) ? '<span class="tag elected">Incoming</span>' : (/in office/i.test(x.s) ? '<span class="tag inc">In office</span>' : '<span class="tag candidate">Candidate</span>');
   var srcTag = /not in airtable/i.test(x.src) ? '<span class="tag" style="background:#fef2f2;color:#b91c1c">Not in Airtable</span>' : (/contacted/i.test(x.src) ? '<span class="tag elected">Contacted</span>' : '<span class="tag" style="background:#f1f5f9;color:#334155">In Airtable</span>');
   return '<div class="cand"><span class="swatch" style="background:#2171b5"></span><div class="cbody"><div class="cname">'+esc(x.n)+tag+'</div><div class="cmeta">'+esc(x.o)+(x.s?' · '+esc(x.s):'')+' '+srcTag+'</div></div></div>';
 }
@@ -257,12 +256,16 @@ function renderPrecinctInfo(d){
   if(kind==='CJ') html += '<p class="hint" style="margin:2px 0 8px">In '+esc(county)+' County the commissioner, JP and constable precincts share the same lines.</p>';
   else html += '<p class="hint" style="margin:2px 0 8px">'+(kind==='J'?'JP and constable precincts':'Commissioner precincts')+' in '+esc(county)+' County are drawn separately from the '+(kind==='J'?'commissioner':'JP')+' precincts — switch with the buttons in the legend.</p>';
   var all = peopleFor(county, pct);
-  var ppl = all.filter(function(x){ return kind==='CJ' || (kind==='J' ? x.k!=='C' : x.k==='C'); });
-  var others = all.filter(function(x){ return ppl.indexOf(x)<0; });
-  html += '<div class="racehdr">Democrats — this precinct</div>';
-  html += ppl.length ? ppl.map(personRow).join('') : '<p class="uncontested">No one from the Region 4 outreach sheets is tied to this precinct.</p>';
-  if(others.length){ html += '<div class="racehdr">Same precinct number, other office</div>'+others.map(personRow).join(''); }
-  html += '<p class="hint" style="margin-top:10px">Source: Region 4 Airtable outreach gap check (9/4/26). Red tag = on the "not in Airtable" contact sheet.</p>';
+  // Commissioner view shows commissioners only; JP & constable view shows JPs and constables only — the precinct lines differ, so they never mix.
+  var want = (pMode==='C') ? ['C'] : ['J','K'];
+  var ppl = all.filter(function(x){ return want.indexOf(x.k)>=0; });
+  var OFFICE = {C:'County Commissioner', J:'Justice of the Peace', K:'Constable'};
+  html += '<div class="racehdr">Democrats — '+(pMode==='C'?'Commissioner':'JP &amp; Constable')+' Pct '+pct+'</div>';
+  if(!ppl.length){ html += '<p class="uncontested">No one from the Region 4 outreach sheets is tied to this precinct.</p>'; }
+  else { want.forEach(function(k){ var grp=ppl.filter(function(x){return x.k===k;}); if(!grp.length) return; if(want.length>1) html += '<div class="cmeta" style="font-weight:700;margin:8px 0 2px;color:var(--ink)">'+OFFICE[k]+'</div>'; html += grp.map(personRow).join(''); }); }
+  var otherN = all.length - ppl.length;
+  if(otherN) html += '<p class="hint" style="margin-top:8px">'+otherN+' more '+(pMode==='C'?'JP / constable':'commissioner')+' contact'+(otherN>1?'s':'')+' for Pct '+pct+' — switch the legend toggle to see '+(otherN>1?'them':'it')+'.</p>';
+  html += '<p class="hint" style="margin-top:10px">Source: Region 4 Airtable outreach gap check (9/4/26, v2). Red tag = on the "not in Airtable" contact sheet.</p>';
   document.getElementById('info').innerHTML = html;
 }
 function parsePrecinct(q){
