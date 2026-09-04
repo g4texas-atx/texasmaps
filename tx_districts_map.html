@@ -19,7 +19,7 @@
   .chambers button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:6px 13px;border-radius:999px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .12s}
   .chambers button .dot{width:10px;height:10px;border-radius:3px}
   .chambers button.active{color:#fff;border-color:transparent;font-weight:600;box-shadow:0 2px 6px rgba(20,27,38,.18)}
-  .chambers button.active.cC{background:#6d28d9}.chambers button.active.cH{background:#0891b2}.chambers button.active.cS{background:#b45309}.chambers button.active.cE{background:#0f766e}
+  .chambers button.active.cC{background:#6d28d9}.chambers button.active.cH{background:#0891b2}.chambers button.active.cS{background:#b45309}.chambers button.active.cE{background:#0f766e}.chambers button.active.cP{background:#be185d}
   .searchwrap{position:relative;flex:1;min-width:240px;max-width:520px}
   #search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:13.5px}
   #drop{position:absolute;top:42px;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 24px rgba(20,27,38,.16);max-height:340px;overflow-y:auto;display:none;z-index:1200}
@@ -61,6 +61,8 @@
   .contact a:hover{text-decoration:underline}
   .legend{font-size:12px;color:var(--muted);line-height:1.5}
   .legend .lrow{display:flex;align-items:center;gap:8px;margin:3px 0;color:var(--ink)}
+  .legend button.pm{border:1px solid var(--line);background:#fff;color:var(--ink);padding:5px 11px;border-radius:999px;font-size:12px;cursor:pointer}
+  .legend button.pm.on{background:#be185d;color:#fff;border-color:transparent;font-weight:600}
   .legend .sw{width:18px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.1)}
   .hint{font-size:12px;color:var(--muted);line-height:1.55}
   .cityrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:6px 0;border-top:1px solid #f1f3f7}
@@ -82,10 +84,11 @@
         <button data-ch="H" class="cH"><span class="dot" style="background:#0891b2"></span>State House</button>
         <button data-ch="S" class="cS"><span class="dot" style="background:#b45309"></span>State Senate</button>
         <button data-ch="E" class="cE"><span class="dot" style="background:#0f766e"></span>Board of Education</button>
+        <button data-ch="P" class="cP"><span class="dot" style="background:#be185d"></span>County precincts</button>
       </div>
       <label class="tog" title="Overlay the six G4T regional-campaign regions (county-based) under the districts"><input type="checkbox" id="tRegions"> G4T regions</label>
       <div class="searchwrap">
-        <input id="search" autocomplete="off" placeholder="Search a 2026 candidate or member, a district (HD 49, SD 14, CD 37, SBOE 5), a county (Travis), or a city…">
+        <input id="search" autocomplete="off" placeholder="Search a candidate or member, a district (HD 49, CD 37), a precinct (Bastrop JP 1, Travis Pct 4), a county, or a city…">
         <div id="drop"></div>
       </div>
     </div>
@@ -107,6 +110,8 @@
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="tx_roster.js"></script>
 <script src="tx_candidates_2026.js"></script>
+<script src="tx_precinct_people.js"></script>
+<script src="tx_county_precincts.js"></script>
 <script>
 (function(){
 "use strict";
@@ -122,9 +127,9 @@ var EP = {
 };
 var CITY_EP = function(layer){return "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/"+layer+"/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME,CENTLAT,CENTLON&returnGeometry=false&f=json&resultRecordCount=6000";};
 var COUNTY_EP = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME&returnGeometry=true&f=geojson&geometryPrecision=4&maxAllowableOffset=0.005&outSR=4326";
-var CHNAME = {C:"U.S. Congress", H:"Texas House", S:"Texas Senate", E:"State Board of Education"};
-var CHPREFIX = {C:"CD", H:"HD", S:"SD", E:"SBOE"};
-var CHCOLOR = {C:"#6d28d9", H:"#0891b2", S:"#b45309", E:"#0f766e"};
+var CHNAME = {C:"U.S. Congress", H:"Texas House", S:"Texas Senate", E:"State Board of Education", P:"County precincts"};
+var CHPREFIX = {C:"CD", H:"HD", S:"SD", E:"SBOE", P:"Pct"};
+var CHCOLOR = {C:"#6d28d9", H:"#0891b2", S:"#b45309", E:"#0f766e", P:"#be185d"};
 
 // ---- map ----
 var map = L.map('map', {zoomControl:true, minZoom:5, maxZoom:16}).setView([31.3, -99.2], 6);
@@ -139,6 +144,7 @@ function loading(on,msg){ if(msg)loadingEl.textContent=msg; loadingEl.classList.
 // distNum -> distId helpers
 function distOf(feat, ch){
   var p = feat.properties || {};
+  if(ch==='P') return p.c+'|'+p.p;
   if(ch==='C' || ch==='E') return String(p.District);
   return String(parseInt(p.BASENAME,10));
 }
@@ -178,12 +184,83 @@ function candRow(c){
     '<div class="cmeta"><span class="ppill '+pc+'">'+(PARTYNAME[pc]||pc)+'</span></div></div></div>';
 }
 
+// ---- county precincts (JP / commissioner / constable) ----
+var PEOPLE = window.TX_PRECINCT_PEOPLE || {};
+var pMode = 'J'; // 'J' = JP & constable precincts, 'C' = commissioner precincts
+var PKIND = {J:'Justice of the Peace / Constable', C:'Commissioner', K:'Constable'};
+var PCOUNTY_COLORS = {};
+var PALETTE = ['#be185d','#0e7490','#b45309','#4d7c0f','#6d28d9','#0f766e','#9f1239','#1d4ed8','#a16207','#7c3aed','#047857','#c2410c','#3730a3'];
+function precinctFeatures(mode){ var o=layers.P; if(!o) return []; return (o.geojson.features||[]).filter(function(f){ return (f.properties.k||'').indexOf(mode)>=0; }); }
+function precinctCounties(){ var o=layers.P; if(!o) return []; var set={}; (o.geojson.features||[]).forEach(function(f){ set[f.properties.c]=1; }); return Object.keys(set).sort(); }
+function countyColor(c){ if(!PCOUNTY_COLORS[c]){ PCOUNTY_COLORS[c]=PALETTE[Object.keys(PCOUNTY_COLORS).length % PALETTE.length]; } return PCOUNTY_COLORS[c]; }
+function buildPrecinctLeaflet(mode){
+  var feats = precinctFeatures(mode);
+  return L.geoJSON({type:'FeatureCollection',features:feats}, {
+    style: function(f){ return {color:'#ffffff', weight:1.2, fillColor:countyColor(f.properties.c), fillOpacity:.38}; },
+    onEachFeature: function(f, l){
+      var d = distOf(f,'P');
+      l.on('click', function(){ selectDistrict('P', d, true); });
+      l.on('mouseover', function(){ l.setStyle({weight:2.4, color:'#0d1320'}); });
+      l.on('mouseout', function(){ if(!(selected&&selected.ch==='P'&&selected.d===d)) l.setStyle(styleFor('P',d)); });
+      l.bindTooltip(f.properties.c+' · '+(f.properties.k==='CJ'?'Pct':(f.properties.k==='J'?'JP Pct':'Comm. Pct'))+' '+f.properties.p, {sticky:true, direction:'top', opacity:.92});
+      f.__d = d;
+    }
+  });
+}
+function setPrecinctMode(mode){
+  pMode = mode; var o=layers.P; if(!o) return;
+  if(o.leaflet && map.hasLayer(o.leaflet)) map.removeLayer(o.leaflet);
+  o.leaflet = buildPrecinctLeaflet(mode); if(active==='P') o.leaflet.addTo(map);
+  renderLegend(); if(selected && selected.ch==='P') selectDistrict('P', selected.d, false);
+}
+function peopleFor(county, pct){
+  var P = PEOPLE[county]||{}; var out=[];
+  ['C','J','K'].forEach(function(k){ ((P[k]||{})[String(pct)]||[]).forEach(function(x){ out.push({k:k, n:x.n, o:x.o, s:x.s, src:x.src}); }); });
+  return out;
+}
+function personRow(x){
+  var st = /candidate|nominee/i.test(x.s+' '+x.o) && !/in office/i.test(x.s) ? 'candidate' : 'inc';
+  var tag = st==='candidate' ? '<span class="tag candidate">Candidate</span>' : '<span class="tag inc">In office</span>';
+  var srcTag = /not in airtable/i.test(x.src) ? '<span class="tag" style="background:#fef2f2;color:#b91c1c">Not in Airtable</span>' : (/contacted/i.test(x.src) ? '<span class="tag elected">Contacted</span>' : '<span class="tag" style="background:#f1f5f9;color:#334155">In Airtable</span>');
+  return '<div class="cand"><span class="swatch" style="background:#2171b5"></span><div class="cbody"><div class="cname">'+esc(x.n)+tag+'</div><div class="cmeta">'+esc(x.o)+(x.s?' · '+esc(x.s):'')+' '+srcTag+'</div></div></div>';
+}
+function renderPrecinctInfo(d){
+  var parts=d.split('|'), county=parts[0], pct=parts[1];
+  var f = (layers.P.geojson.features||[]).filter(function(x){ return x.properties.c===county && x.properties.p===pct && (x.properties.k||'').indexOf(pMode)>=0; })[0];
+  var kind = f ? f.properties.k : pMode;
+  var title = kind==='CJ' ? 'Precinct '+pct : (kind==='J' ? 'JP / Constable Precinct '+pct : 'Commissioner Precinct '+pct);
+  var html = '<h2>'+esc(county)+' County</h2><p class="dnum">'+title+'</p>';
+  if(kind==='CJ') html += '<p class="hint" style="margin:2px 0 8px">In '+esc(county)+' County the commissioner, JP and constable precincts share the same lines.</p>';
+  else html += '<p class="hint" style="margin:2px 0 8px">'+(kind==='J'?'JP and constable precincts':'Commissioner precincts')+' in '+esc(county)+' County are drawn separately from the '+(kind==='J'?'commissioner':'JP')+' precincts — switch with the buttons in the legend.</p>';
+  var all = peopleFor(county, pct);
+  var ppl = all.filter(function(x){ return kind==='CJ' || (kind==='J' ? x.k!=='C' : x.k==='C'); });
+  var others = all.filter(function(x){ return ppl.indexOf(x)<0; });
+  html += '<div class="racehdr">Democrats — this precinct</div>';
+  html += ppl.length ? ppl.map(personRow).join('') : '<p class="uncontested">No one from the Region 4 outreach sheets is tied to this precinct.</p>';
+  if(others.length){ html += '<div class="racehdr">Same precinct number, other office</div>'+others.map(personRow).join(''); }
+  html += '<p class="hint" style="margin-top:10px">Source: Region 4 Airtable outreach gap check (9/4/26). Red tag = on the "not in Airtable" contact sheet.</p>';
+  document.getElementById('info').innerHTML = html;
+}
+function parsePrecinct(q){
+  var m = q.match(/^\s*([a-z][a-z .'-]+?)\s+(?:county\s+)?(jp|justice|commissioner|comm\.?|constable|pct\.?|precinct)\s*(?:pct\.?|precinct)?\s*#?\s*(\d{1,2})\s*$/i);
+  if(!m) return null;
+  var county = m[1].trim().replace(/\b\w/g,function(c){return c.toUpperCase();});
+  var kind = /comm/i.test(m[2]) ? 'C' : 'J';
+  return {county:county, kind:kind, pct:String(+m[3])};
+}
+function precinctPeopleMatches(q){
+  q=q.toLowerCase(); var out=[];
+  Object.keys(PEOPLE).forEach(function(c){ ['C','J','K'].forEach(function(k){ var by=PEOPLE[c][k]||{}; Object.keys(by).forEach(function(pct){ by[pct].forEach(function(x){ if(x.n.toLowerCase().indexOf(q)>=0) out.push({county:c, kind:k, pct:pct, name:x.n, o:x.o}); }); }); }); });
+  return out.slice(0,12);
+}
+
 // ---- layer cache & rendering ----
 var layers = {};   // ch -> {geojson, leaflet}
 var active = 'C';
 var selected = null; // {ch, d, layer}
 
 function styleFor(ch, d){
+  if(ch==='P'){ return {color:'#ffffff', weight:1.2, fillColor:countyColor(d.split('|')[0]), fillOpacity:.38}; }
   // with the G4T region tint on, districts go mostly transparent with dark outlines so the regions read through
   var ro = (typeof regionsOn!=='undefined') && regionsOn;
   if(ch==='C' || ch==='E'){
@@ -198,7 +275,9 @@ function restyleActive(){ var o=layers[active]; if(!o) return; o.leaflet.eachLay
 function fetchLayer(ch){
   if(layers[ch]) return Promise.resolve(layers[ch]);
   loading(true,'Loading '+CHNAME[ch]+' boundaries…');
-  return fetch(EP[ch]).then(function(r){return r.json();}).then(function(gj){
+  var src = ch==='P' ? Promise.resolve(window.TX_PRECINCTS||{type:'FeatureCollection',features:[]}) : fetch(EP[ch]).then(function(r){return r.json();});
+  return src.then(function(gj){
+    if(ch==='P'){ layers.P = {geojson:gj, leaflet:null}; layers.P.leaflet = buildPrecinctLeaflet(pMode); loading(false); return layers.P; }
     var lyr = L.geoJSON(gj, {
       style: function(f){ return styleFor(ch, distOf(f,ch)); },
       onEachFeature: function(f, l){
@@ -252,6 +331,7 @@ function selectDistrict(ch, d, fly){
 }
 
 function renderInfo(ch, d){
+  if(ch==='P'){ renderPrecinctInfo(d); return; }
   var m = memberOf(ch, d);
   var html = '<h2>'+CHNAME[ch]+'</h2>'+
     '<p class="dnum">'+CHPREFIX[ch]+'-'+d+'</p>';
@@ -280,6 +360,15 @@ function renderInfo(ch, d){
 
 function renderLegend(){
   var el = document.getElementById('legend');
+  if(active==='P'){
+    var cs = precinctCounties();
+    el.innerHTML = '<h2>Legend — County precincts</h2>'+
+      '<div style="display:flex;gap:6px;margin:4px 0 10px"><button class="pm'+(pMode==='J'?' on':'')+'" data-pm="J">JP &amp; constable</button><button class="pm'+(pMode==='C'?' on':'')+'" data-pm="C">Commissioner</button></div>'+
+      cs.map(function(c){ var ks={}; (layers.P.geojson.features||[]).forEach(function(f){ if(f.properties.c===c) ks[f.properties.k]=1; }); var note = ks.CJ ? '' : (ks.J && ks.C ? ' <span style="color:var(--muted);font-size:11px">· JP ≠ commissioner lines</span>' : ' <span style="color:var(--muted);font-size:11px">· commissioner precincts only</span>'); return '<div class="lrow"><span class="sw" style="background:'+countyColor(c)+'"></span>'+c+note+'</div>'; }).join('')+
+      '<p class="hint" style="margin:8px 0 0">13 of the 30 Central Texas counties publish precinct boundaries in a GIS service; the rest (Burnet, Falls, Grimes, Robertson, Milam, Lee, Fayette, Hill, Limestone, Bosque, Freestone, Madison, Leon, Lampasas, San Saba, Hamilton, Mills) only post PDF maps. Llano is derived from its voting-precinct numbering. McLennan has commissioner precincts only (its 5 JP precincts aren’t published).</p>';
+    Array.prototype.forEach.call(el.querySelectorAll('button.pm'), function(b){ b.addEventListener('click', function(){ setPrecinctMode(b.dataset.pm); }); });
+    return;
+  }
   var regLeg = regionsOn ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--line)"><h2 style="margin-bottom:6px">G4T regions</h2>'+G4T_REGIONS.map(function(r){ return '<div class="lrow"><span class="sw" style="background:'+r.color+'"></span>'+r.name+'</div>'; }).join('')+'<p class="hint" style="margin:6px 0 0">Counties are tinted by G4T region; districts fade to outlines so you can see which regions each one straddles. Click a district for the county list.</p></div>' : '';
   if(active==='C' || active==='E'){
     el.innerHTML = '<h2>Legend — '+CHNAME[active]+'</h2>'+
@@ -490,6 +579,10 @@ function badge(ch){ return '<span class="badge" style="background:'+CHCOLOR[ch]+
 function renderDrop(q){
   if(!q || q.length<1){ dropEl.style.display='none'; return; }
   var html=''; var pd=parseDistrict(q);
+  var pp=parsePrecinct(q);
+  if(pp && PEOPLE){ html+='<div class="grp">County precinct</div><div class="opt" data-act="pct" data-county="'+esc(pp.county)+'" data-kind="'+pp.kind+'" data-d="'+esc(pp.county)+'|'+pp.pct+'"><span class="badge" style="background:#be185d">Pct</span><span>'+esc(pp.county)+' County · '+(pp.kind==='C'?'Commissioner':'JP / Constable')+' Precinct '+pp.pct+'</span></div>'; }
+  var ppl=precinctPeopleMatches(q);
+  if(ppl.length){ html+='<div class="grp">People — county precinct offices (outreach sheets)</div>'; ppl.forEach(function(o){ html+='<div class="opt" data-act="pct" data-county="'+esc(o.county)+'" data-kind="'+(o.kind==='C'?'C':'J')+'" data-d="'+esc(o.county)+'|'+o.pct+'"><span class="badge" style="background:#be185d">Pct</span><span>'+esc(o.name)+' <span style="color:var(--muted)">— '+esc(o.o)+' · '+esc(o.county)+'</span></span></div>'; }); }
   if(pd){ var ci=currentInfo(pd.ch,pd.d); html+='<div class="grp">District</div><div class="opt" data-act="dist" data-ch="'+pd.ch+'" data-d="'+pd.d+'">'+badge(pd.ch)+'<span>'+CHPREFIX[pd.ch]+'-'+pd.d+' — '+(ci?esc(ci.name):'(no member)')+'</span></div>'; }
   var nm=peopleMatches(q);
   if(nm.length){ html+='<div class="grp">People — 2026 candidates &amp; current members</div>'; nm.forEach(function(o){ var pp=o.p?' <span class="badge p" style="background:'+(PCOLOR[o.p]||'#6b7280')+'">'+o.p+'</span>':''; html+='<div class="opt" data-act="dist" data-ch="'+o.ch+'" data-d="'+o.d+'">'+badge(o.ch)+'<span>'+esc(o.name)+pp+' &middot; '+CHPREFIX[o.ch]+'-'+o.d+' &middot; '+o.kind+'</span></div>'; }); }
@@ -503,6 +596,7 @@ function renderDrop(q){
 dropEl.addEventListener('click', function(e){
   var opt=e.target.closest('.opt'); if(!opt) return;
   if(opt.dataset.act==='dist'){ selectDistrict(opt.dataset.ch, opt.dataset.d, true); }
+  else if(opt.dataset.act==='pct'){ var kind=opt.dataset.kind, dd=opt.dataset.d; fetchLayer('P').then(function(){ if(pMode!==kind){ pMode=kind; layers.P.leaflet=buildPrecinctLeaflet(kind); } var has=(layers.P.geojson.features||[]).some(function(f){ return f.properties.c+'|'+f.properties.p===dd && (f.properties.k||'').indexOf(kind)>=0; }); if(has){ selectDistrict('P', dd, true); } else { showChamber('P'); document.getElementById('info').innerHTML='<h2>County precincts</h2><p class="dnum" style="font-size:18px">'+esc(dd.split('|')[0])+' County · Precinct '+esc(dd.split('|')[1])+'</p><p class="hint">No GIS precinct boundary is published for this county (PDF map only), so it can’t be drawn yet.</p>'+(peopleFor(dd.split('|')[0],dd.split('|')[1]).map(personRow).join('')); } }); }
   else if(opt.dataset.act==='city'){ var nm=opt.dataset.name; var c=cities.filter(function(x){return x.name===nm;})[0]; if(c) cityLookup(c); }
   else if(opt.dataset.act==='county'){ var cn=opt.dataset.name; var co=counties.filter(function(x){return x.name===cn;})[0]; if(co) countyLookup(co); }
   dropEl.style.display='none'; searchEl.value='';
@@ -517,7 +611,7 @@ document.getElementById('tRegions').addEventListener('change', function(e){ togg
 document.getElementById('chambers').addEventListener('click', function(e){ var b=e.target.closest('button'); if(b) showChamber(b.dataset.ch); });
 
 // foot
-document.getElementById('foot').innerHTML = 'Boundaries & members: Texas Legislative Council (giswebe.tlc.texas.gov, wrm.capitol.texas.gov) and U.S. Census TIGERweb. Congressional map = Plan C2333 (2026); SBOE map = Plan E2106. 2026 general-election candidates compiled from Wikipedia & Ballotpedia (post March-3 primary / May-26 runoff) — verify close races against official filings. Loads live data — needs an internet connection.';
+document.getElementById('foot').innerHTML = 'County precincts: county GIS services (Bastrop, Travis, Williamson, Hays, Bell, McLennan, Brazos, Caldwell, Blanco, Coryell, Washington, Burleson; Llano derived from TLC voting precincts), snapshot Sept 2026; Democrats by precinct from the Region 4 outreach sheets. ' + 'Boundaries & members: Texas Legislative Council (giswebe.tlc.texas.gov, wrm.capitol.texas.gov) and U.S. Census TIGERweb. Congressional map = Plan C2333 (2026); SBOE map = Plan E2106. 2026 general-election candidates compiled from Wikipedia & Ballotpedia (post March-3 primary / May-26 runoff) — verify close races against official filings. Loads live data — needs an internet connection.';
 
 // init
 showChamber('C');
