@@ -71,6 +71,10 @@
   .loading{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#161b26;color:#fff;padding:6px 14px;border-radius:999px;font-size:12px;z-index:1100;opacity:0;transition:opacity .2s;pointer-events:none}
   .loading.on{opacity:.92}
   .foot{font-size:10.5px;color:var(--muted);margin-top:auto;line-height:1.5}
+  .cdot{width:7px;height:7px;border-radius:50%;background:#11151d;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+  .cdot.r1{width:9px;height:9px}
+  .clab{font-size:11px;font-weight:700;color:#11151d;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;pointer-events:none}
+  .clab.r2,.clab.r3{font-weight:600;font-size:10.5px;color:#2a3242}
   .dlabel{font-size:11px;font-weight:700;color:#1a2233;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;background:transparent;border:0;box-shadow:none}
 </style>
 </head>
@@ -86,6 +90,7 @@
         <button data-ch="E" class="cE"><span class="dot" style="background:#0f766e"></span>Board of Education</button>
         <button data-ch="P" class="cP"><span class="dot" style="background:#be185d"></span>County precincts</button>
       </div>
+      <label class="tog" title="Show the three largest cities/towns in every county (labels appear as you zoom in)"><input type="checkbox" id="tCities" checked> Cities</label>
       <label class="tog" title="Overlay the six G4T regional-campaign regions (county-based) under the districts"><input type="checkbox" id="tRegions"> G4T regions</label>
       <div class="searchwrap">
         <input id="search" autocomplete="off" placeholder="Search a candidate or member, a district (HD 49, CD 37), a precinct (Bastrop JP 1, Travis Pct 4), a county, or a city…">
@@ -112,6 +117,7 @@
 <script src="tx_candidates_2026.js"></script>
 <script src="tx_precinct_people.js"></script>
 <script src="tx_county_precincts.js"></script>
+<script src="tx_top3_cities.js"></script>
 <script>
 (function(){
 "use strict";
@@ -607,11 +613,31 @@ searchEl.addEventListener('focus', function(){ loadCities(); loadCounties(); });
 document.addEventListener('click', function(e){ if(!e.target.closest('.searchwrap')) dropEl.style.display='none'; });
 
 document.getElementById('tRegions').addEventListener('change', function(e){ toggleRegions(e.target.checked); });
+
+// ---- three largest cities per county (toggle) ----
+var CITY3 = window.TX_TOP3_CITIES || [];
+map.createPane('cities'); map.getPane('cities').style.zIndex = 620; // above polygons, below popups
+var cityDots = L.layerGroup(), cityLabels = L.layerGroup(), citiesOn = true;
+CITY3.forEach(function(c){
+  var m = L.marker([c.lat,c.lon], {pane:'cities', interactive:false, icon:L.divIcon({className:'', html:'<div class="cdot r'+c.r+'"></div>', iconSize:[9,9], iconAnchor:[4.5,4.5]})});
+  m.__c = c; cityDots.addLayer(m);
+  var l = L.marker([c.lat,c.lon], {pane:'cities', interactive:false, icon:L.divIcon({className:'', html:'<div class="clab r'+c.r+'">'+esc(c.n)+'</div>', iconSize:null, iconAnchor:[-6,7]})});
+  l.__c = c; cityLabels.addLayer(l);
+});
+function refreshCityLabels(){
+  var z = map.getZoom(); var show = {1: z>=7, 2: z>=9, 3: z>=10};
+  cityLabels.eachLayer(function(l){ var el=l.getElement(); if(el) el.style.display = show[l.__c.r] ? '' : 'none'; });
+  cityDots.eachLayer(function(l){ var el=l.getElement(); if(el) el.style.display = (l.__c.r===1 || z>=8) ? '' : 'none'; });
+}
+function toggleCities(on){ citiesOn=on; if(on){ cityDots.addTo(map); cityLabels.addTo(map); refreshCityLabels(); } else { map.removeLayer(cityDots); map.removeLayer(cityLabels); } }
+map.on('zoomend', function(){ if(citiesOn) refreshCityLabels(); });
+document.getElementById('tCities').addEventListener('change', function(e){ toggleCities(e.target.checked); });
+toggleCities(true);
 // chamber buttons
 document.getElementById('chambers').addEventListener('click', function(e){ var b=e.target.closest('button'); if(b) showChamber(b.dataset.ch); });
 
 // foot
-document.getElementById('foot').innerHTML = 'County precincts: county GIS services (Bastrop, Travis, Williamson, Hays, Bell, McLennan, Brazos, Caldwell, Blanco, Coryell, Washington, Burleson; Llano derived from TLC voting precincts), snapshot Sept 2026; Democrats by precinct from the Region 4 outreach sheets. ' + 'Boundaries & members: Texas Legislative Council (giswebe.tlc.texas.gov, wrm.capitol.texas.gov) and U.S. Census TIGERweb. Congressional map = Plan C2333 (2026); SBOE map = Plan E2106. 2026 general-election candidates compiled from Wikipedia & Ballotpedia (post March-3 primary / May-26 runoff) — verify close races against official filings. Loads live data — needs an internet connection.';
+document.getElementById('foot').innerHTML = 'Cities: three largest places per county (SimpleMaps / ACS). County precincts: county GIS services (Bastrop, Travis, Williamson, Hays, Bell, McLennan, Brazos, Caldwell, Blanco, Coryell, Washington, Burleson; Llano derived from TLC voting precincts), snapshot Sept 2026; Democrats by precinct from the Region 4 outreach sheets. ' + 'Boundaries & members: Texas Legislative Council (giswebe.tlc.texas.gov, wrm.capitol.texas.gov) and U.S. Census TIGERweb. Congressional map = Plan C2333 (2026); SBOE map = Plan E2106. 2026 general-election candidates compiled from Wikipedia & Ballotpedia (post March-3 primary / May-26 runoff) — verify close races against official filings. Loads live data — needs an internet connection.';
 
 // init
 showChamber('C');
