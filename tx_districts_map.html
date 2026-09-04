@@ -28,6 +28,8 @@
   #drop .opt:hover{background:#eff6ff}
   #drop .opt .badge{font-size:10px;font-weight:700;color:#fff;border-radius:5px;padding:1px 6px;flex:none}
   .sub{font-size:11.5px;color:var(--muted)}
+  .tog{display:flex;align-items:center;gap:6px;font-size:13px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;background:#fff;white-space:nowrap}
+  .tog input{margin:0}
   main{flex:1;display:flex;min-height:0}
   #map{flex:1;min-width:0;background:#dfe6ee}
   aside{width:340px;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
@@ -81,6 +83,7 @@
         <button data-ch="S" class="cS"><span class="dot" style="background:#b45309"></span>State Senate</button>
         <button data-ch="E" class="cE"><span class="dot" style="background:#0f766e"></span>Board of Education</button>
       </div>
+      <label class="tog" title="Overlay the six G4T regional-campaign regions (county-based) under the districts"><input type="checkbox" id="tRegions"> G4T regions</label>
       <div class="searchwrap">
         <input id="search" autocomplete="off" placeholder="Search a 2026 candidate or member, a district (HD 49, SD 14, CD 37, SBOE 5), a county (Travis), or a city…">
         <div id="drop"></div>
@@ -181,13 +184,16 @@ var active = 'C';
 var selected = null; // {ch, d, layer}
 
 function styleFor(ch, d){
+  // with the G4T region tint on, districts go mostly transparent with dark outlines so the regions read through
+  var ro = (typeof regionsOn!=='undefined') && regionsOn;
   if(ch==='C' || ch==='E'){
     var ci = currentInfo(ch, d);
     var c = ci && ci.party==='R' ? 'var(--rep)' : (ci && ci.party==='D' ? 'var(--dem)' : '#94a3b8');
-    return {color:'#ffffff', weight:1, fillColor:c, fillOpacity:.45};
+    return ro ? {color:'#1a2233', weight:1.6, fillColor:c, fillOpacity:.10} : {color:'#ffffff', weight:1, fillColor:c, fillOpacity:.45};
   }
-  return {color:'#ffffff', weight:1, fillColor:CHCOLOR[ch], fillOpacity:.30};
+  return ro ? {color:'#1a2233', weight:1.6, fillColor:CHCOLOR[ch], fillOpacity:.08} : {color:'#ffffff', weight:1, fillColor:CHCOLOR[ch], fillOpacity:.30};
 }
+function restyleActive(){ var o=layers[active]; if(!o) return; o.leaflet.eachLayer(function(l){ if(l.feature) l.setStyle(styleFor(active, l.feature.__d)); }); if(selected){ var sl=findLeafletLayer(selected.ch,selected.d); if(sl){ sl.setStyle({color:'var(--sel)', weight:3.2, fillOpacity:.55}); sl.bringToFront(); } } }
 
 function fetchLayer(ch){
   if(layers[ch]) return Promise.resolve(layers[ch]);
@@ -224,6 +230,7 @@ function findLeafletLayer(ch, d){
 }
 
 function selectDistrict(ch, d, fly){
+  if(!counties.length){ loadCounties().then(function(){ if(selected&&selected.ch===ch&&selected.d===String(d)) renderInfo(ch,String(d)); }); }
   if(active!==ch){ // switch chamber first, then select once its layer is ready
     active = ch;
     Object.keys(layers).forEach(function(k){ if(layers[k].leaflet && map.hasLayer(layers[k].leaflet)) map.removeLayer(layers[k].leaflet); });
@@ -267,11 +274,13 @@ function renderInfo(ch, d){
   }
   html += '<p class="contact" style="margin-top:12px">'+
     '<a href="https://wrm.capitol.texas.gov/home" target="_blank" rel="noopener">Official contact & details &#8599;</a></p>';
+  html += regionBreakdownHtml(ch, d);
   document.getElementById('info').innerHTML = html;
 }
 
 function renderLegend(){
   var el = document.getElementById('legend');
+  var regLeg = regionsOn ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--line)"><h2 style="margin-bottom:6px">G4T regions</h2>'+G4T_REGIONS.map(function(r){ return '<div class="lrow"><span class="sw" style="background:'+r.color+'"></span>'+r.name+'</div>'; }).join('')+'<p class="hint" style="margin:6px 0 0">Counties are tinted by G4T region; districts fade to outlines so you can see which regions each one straddles. Click a district for the county list.</p></div>' : '';
   if(active==='C' || active==='E'){
     el.innerHTML = '<h2>Legend — '+CHNAME[active]+'</h2>'+
       '<div class="lrow"><span class="sw" style="background:var(--dem)"></span>Democratic-held seat</div>'+
@@ -279,11 +288,11 @@ function renderLegend(){
       '<div class="lrow"><span class="sw" style="background:#94a3b8"></span>No incumbent / vacant</div>'+
       '<p class="hint" style="margin:8px 0 0">'+(active==='C'
         ? 'Congressional boundaries: <b>Plan C2333</b>, in effect for the 2026 elections.'
-        : 'SBOE boundaries: <b>Plan E2106</b> (effective 2022). Seats have staggered 4-year terms — 8 of 15 are on the 2026 ballot.')+'</p>';
+        : 'SBOE boundaries: <b>Plan E2106</b> (effective 2022). Seats have staggered 4-year terms — 8 of 15 are on the 2026 ballot.')+'</p>'+regLeg;
   } else {
     el.innerHTML = '<h2>Legend — '+CHNAME[active]+'</h2>'+
       '<div class="lrow"><span class="sw" style="background:'+CHCOLOR[active]+'"></span>'+CHNAME[active]+' district</div>'+
-      '<p class="hint" style="margin:8px 0 0">Boundaries: current enacted plan (2023–2026).</p>';
+      '<p class="hint" style="margin:8px 0 0">Boundaries: current enacted plan (2023–2026).</p>'+regLeg;
   }
 }
 
@@ -357,6 +366,57 @@ function loadCounties(){
   }).catch(function(e){ return counties; });
   return countiesReady;
 }
+
+// ---- G4T regional campaign regions (same scheme as the Race & Ethnicity / Region Builder maps) ----
+var G4T_REGIONS = [{"id": 1, "name": "Central Texas / Austin", "color": "#3b82f6"}, {"id": 2, "name": "Dallas / Collin / NE Texas", "color": "#4a0404"}, {"id": 3, "name": "Houston / Gulf / East Texas", "color": "#6287b5"}, {"id": 4, "name": "Fort Worth / Denton / Panhandle", "color": "#c8a96a"}, {"id": 5, "name": "El Paso / Border / RGV", "color": "#caa92f"}, {"id": 6, "name": "San Antonio / Corpus Christi", "color": "#809351"}];
+var G4T_REGION_OF = {"Anderson":2,"Andrews":5,"Angelina":3,"Aransas":6,"Archer":4,"Armstrong":4,"Atascosa":6,"Austin":3,"Bailey":4,"Bandera":6,"Bastrop":1,"Baylor":4,"Bee":6,"Bell":1,"Bexar":6,"Blanco":1,"Borden":5,"Bosque":1,"Bowie":2,"Brazoria":3,"Brazos":1,"Brewster":5,"Briscoe":4,"Brooks":5,"Brown":4,"Burleson":1,"Burnet":1,"Caldwell":1,"Calhoun":6,"Callahan":4,"Cameron":5,"Camp":2,"Carson":4,"Cass":2,"Castro":4,"Chambers":3,"Cherokee":2,"Childress":4,"Clay":4,"Cochran":4,"Coke":5,"Coleman":4,"Collin":2,"Collingsworth":4,"Colorado":3,"Comal":6,"Comanche":4,"Concho":5,"Cooke":4,"Coryell":1,"Cottle":4,"Crane":5,"Crockett":5,"Crosby":4,"Culberson":5,"Dallam":4,"Dallas":2,"Dawson":5,"Deaf Smith":4,"Delta":2,"Denton":4,"DeWitt":6,"Dickens":4,"Dimmit":5,"Donley":4,"Duval":5,"Eastland":4,"Ector":5,"Edwards":5,"Ellis":2,"El Paso":5,"Erath":4,"Falls":1,"Fannin":2,"Fayette":1,"Fisher":4,"Floyd":4,"Foard":4,"Fort Bend":3,"Franklin":2,"Freestone":1,"Frio":6,"Gaines":5,"Galveston":3,"Garza":4,"Gillespie":6,"Glasscock":5,"Goliad":6,"Gonzales":6,"Gray":4,"Grayson":4,"Gregg":2,"Grimes":1,"Guadalupe":6,"Hale":4,"Hall":4,"Hamilton":1,"Hansford":4,"Hardeman":4,"Hardin":3,"Harris":3,"Harrison":2,"Hartley":4,"Haskell":4,"Hays":1,"Hemphill":4,"Henderson":2,"Hidalgo":5,"Hill":1,"Hockley":4,"Hood":4,"Hopkins":2,"Houston":3,"Howard":5,"Hudspeth":5,"Hunt":2,"Hutchinson":4,"Irion":5,"Jack":4,"Jackson":6,"Jasper":3,"Jeff Davis":5,"Jefferson":3,"Jim Hogg":5,"Jim Wells":5,"Johnson":4,"Jones":4,"Karnes":6,"Kaufman":2,"Kendall":6,"Kenedy":5,"Kent":4,"Kerr":6,"Kimble":5,"King":4,"Kinney":5,"Kleberg":5,"Knox":4,"Lamar":2,"Lamb":4,"Lampasas":1,"La Salle":5,"Lavaca":6,"Lee":1,"Leon":1,"Liberty":3,"Limestone":1,"Lipscomb":4,"Live Oak":5,"Llano":1,"Loving":5,"Lubbock":4,"Lynn":4,"McCulloch":5,"McLennan":1,"McMullen":5,"Madison":1,"Marion":2,"Martin":5,"Mason":5,"Matagorda":3,"Maverick":5,"Medina":6,"Menard":5,"Midland":5,"Milam":1,"Mills":1,"Mitchell":4,"Montague":4,"Montgomery":3,"Moore":4,"Morris":2,"Motley":4,"Nacogdoches":3,"Navarro":2,"Newton":3,"Nolan":4,"Nueces":6,"Ochiltree":4,"Oldham":4,"Orange":3,"Palo Pinto":4,"Panola":2,"Parker":4,"Parmer":4,"Pecos":5,"Polk":3,"Potter":4,"Presidio":5,"Rains":2,"Randall":4,"Reagan":5,"Real":5,"Red River":2,"Reeves":5,"Refugio":6,"Roberts":4,"Robertson":1,"Rockwall":2,"Runnels":4,"Rusk":2,"Sabine":3,"San Augustine":3,"San Jacinto":3,"San Patricio":6,"San Saba":1,"Schleicher":5,"Scurry":4,"Shackelford":4,"Shelby":3,"Sherman":4,"Smith":2,"Somervell":4,"Starr":5,"Stephens":4,"Sterling":5,"Stonewall":4,"Sutton":5,"Swisher":4,"Tarrant":4,"Taylor":4,"Terrell":5,"Terry":4,"Throckmorton":4,"Titus":2,"Tom Green":5,"Travis":1,"Trinity":3,"Tyler":3,"Upshur":2,"Upton":5,"Uvalde":5,"Val Verde":5,"Van Zandt":2,"Victoria":6,"Walker":3,"Waller":3,"Ward":5,"Washington":1,"Webb":5,"Wharton":3,"Wheeler":4,"Wichita":4,"Wilbarger":4,"Willacy":5,"Williamson":1,"Wilson":6,"Winkler":5,"Wise":4,"Wood":2,"Yoakum":4,"Young":4,"Zapata":5,"Zavala":5}; // county name -> region id
+var G4T_BY_ID = {}; G4T_REGIONS.forEach(function(r){ G4T_BY_ID[r.id]=r; });
+var regionLayer = null, regionsOn = false;
+map.createPane('regions'); map.getPane('regions').style.zIndex = 350; // below district polygons (overlayPane = 400)
+function buildRegionLayer(){
+  return loadCounties().then(function(){
+    if(regionLayer) return regionLayer;
+    var feats = counties.map(function(c){ return {type:'Feature', properties:{name:c.name, rid:G4T_REGION_OF[c.name]||0}, geometry:c.geom}; });
+    regionLayer = L.geoJSON({type:'FeatureCollection',features:feats}, {
+      pane:'regions', interactive:false,
+      style:function(f){ var R=G4T_BY_ID[f.properties.rid]; return {color:R?R.color:'#999', weight:.6, opacity:.8, fillColor:R?R.color:'#999', fillOpacity:.38}; }
+    });
+    return regionLayer;
+  });
+}
+function toggleRegions(on){
+  regionsOn = on; restyleActive();
+  if(on){ loading(true,'Loading G4T regions…'); buildRegionLayer().then(function(l){ l.addTo(map); loading(false); renderLegend(); }); }
+  else { if(regionLayer && map.hasLayer(regionLayer)) map.removeLayer(regionLayer); renderLegend(); }
+  if(selected) renderInfo(selected.ch, selected.d);
+}
+// counties overlapped by a district: sample a grid of points inside each county and test them against the district polygon
+function countiesInDistrict(ch, d){
+  var o=layers[ch]; if(!o||!counties.length) return [];
+  var geoms=(o.geojson.features||[]).filter(function(f){ return distOf(f,ch)===String(d); }).map(function(f){ return f.geometry; });
+  if(!geoms.length) return [];
+  var db=geomBounds({type:'MultiPolygon',coordinates:geoms.map(function(g){ return g.type==='Polygon'?[g.coordinates]:g.coordinates; }).reduce(function(a,b){return a.concat(b);},[])});
+  var out=[], N=9;
+  counties.forEach(function(c){
+    var bb=c.bb; if(bb.maxx<db.minx||bb.minx>db.maxx||bb.maxy<db.miny||bb.miny>db.maxy) return;
+    var hit=0, tot=0;
+    for(var i=1;i<N;i++) for(var j=1;j<N;j++){ var x=bb.minx+(bb.maxx-bb.minx)*i/N, y=bb.miny+(bb.maxy-bb.miny)*j/N; if(!pipGeom(x,y,c.geom)) continue; tot++; for(var g=0;g<geoms.length;g++){ if(pipGeom(x,y,geoms[g])){ hit++; break; } } }
+    if(hit) out.push({name:c.name, rid:G4T_REGION_OF[c.name]||0, share:tot?hit/tot:0});
+  });
+  return out;
+}
+function regionBreakdownHtml(ch, d){
+  var cs=countiesInDistrict(ch,d); if(!cs.length) return '';
+  var by={}; cs.forEach(function(c){ (by[c.rid]=by[c.rid]||[]).push(c); });
+  var rids=Object.keys(by).map(Number).sort(function(a,b){ return by[b].length-by[a].length; });
+  var html='<div class="racehdr" style="margin-top:14px">G4T regions in this district</div>';
+  rids.forEach(function(rid){ var R=G4T_BY_ID[rid]; var list=by[rid].sort(function(a,b){ return b.share-a.share; });
+    html+='<div style="font-size:12.5px;margin:6px 0"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:'+(R?R.color:'#999')+';vertical-align:-1px;margin-right:6px"></span><b>'+(R?esc(R.name):'Unassigned')+'</b> <span style="color:var(--muted)">· '+list.length+(list.length===1?' county':' counties')+'</span>'+
+      '<div style="font-size:11.5px;color:var(--muted);margin:2px 0 0 17px;line-height:1.5">'+list.map(function(c){ return esc(c.name)+(c.share<0.5?' <span style="opacity:.7">(part)</span>':''); }).join(', ')+'</div></div>'; });
+  if(rids.length>1) html+='<p class="hint" style="margin:6px 0 0">This district crosses <b>'+rids.length+' G4T regions</b>. "(part)" = the district covers less than half of that county.</p>';
+  return html;
+}
+
 function countyMatches(q){ q=q.toLowerCase(); if(!counties.length) return []; var pre=[],inc=[]; for(var i=0;i<counties.length;i++){ var n=counties[i].name.toLowerCase(); if(n.indexOf(q)===0) pre.push(counties[i]); else if(n.indexOf(q)>=0) inc.push(counties[i]); } return pre.concat(inc).slice(0,10); }
 function districtsInCounty(ch, county){
   var bb=county.bb, set={}, N=26;
@@ -452,6 +512,7 @@ searchEl.addEventListener('input', function(){ var q=searchEl.value.trim(); clea
 searchEl.addEventListener('focus', function(){ loadCities(); loadCounties(); });
 document.addEventListener('click', function(e){ if(!e.target.closest('.searchwrap')) dropEl.style.display='none'; });
 
+document.getElementById('tRegions').addEventListener('change', function(e){ toggleRegions(e.target.checked); });
 // chamber buttons
 document.getElementById('chambers').addEventListener('click', function(e){ var b=e.target.closest('button'); if(b) showChamber(b.dataset.ch); });
 
